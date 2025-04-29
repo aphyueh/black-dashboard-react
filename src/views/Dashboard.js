@@ -85,7 +85,7 @@ function Dashboard(props) {
     const formData = new FormData();
     formData.append("image", uploadedImage);
 
-    const res = await fetch("/api/process", {
+    const res = await fetch(`${backendUrl}/api/process`, {
       method: "POST",
       body: formData,
     });
@@ -110,6 +110,64 @@ function Dashboard(props) {
   return (
     <>
       <div className="content">
+        
+        <Row>
+          <Col lg="6" md="12">
+            <Card>
+              <CardHeader>
+                <h5 className="card-category">Upload Images</h5>
+              </CardHeader>
+              <CardBody>
+                <div style={{
+                  border: "2px dashed #ccc",
+                  borderRadius: "10px",
+                  padding: "20px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  height: "300px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                }}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById("fileInput").click()}
+              >
+                {uploadedImageUrl ? (
+                  <img
+                    src={uploadedImageUrl}
+                    alt="Uploaded"
+                    style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                  />
+                ) : (
+                  <p>Drag & Drop or Click to Upload</p>
+                )}
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleImageUpload}
+                />
+              </div>
+              <Button onClick={handleProcessImage} color="primary" className="mt-3">
+                Process
+              </Button>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col lg="6" md="12">
+            <Card>
+              <CardHeader>
+                <h5 className="card-category">Processed Output</h5>
+              </CardHeader>
+              <CardBody>
+                <OutputImage processedImageUrl={processedImageUrl} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
         <Row>
           <Col xs="12">
             <Card className="card-chart">
@@ -190,64 +248,7 @@ function Dashboard(props) {
             </Card>
           </Col>
         </Row>
-        <Row>
-          <Col lg="6" md="12">
-            <Card>
-              <CardHeader>
-                <h5 className="card-category">Upload Images</h5>
-              </CardHeader>
-              <CardBody>
-                <div style={{
-                  border: "2px dashed #ccc",
-                  borderRadius: "10px",
-                  padding: "20px",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  height: "300px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById("fileInput").click()}
-              >
-                {uploadedImageUrl ? (
-                  <img
-                    src={uploadedImageUrl}
-                    alt="Uploaded"
-                    style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-                  />
-                ) : (
-                  <p>Drag & Drop or Click to Upload</p>
-                )}
-                <input
-                  type="file"
-                  id="fileInput"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={handleImageUpload}
-                />
-              </div>
-              <Button onClick={handleProcessImage} color="primary" className="mt-3">
-                Process
-              </Button>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="6" md="12">
-            <Card>
-              <CardHeader>
-                <h5 className="card-category">Processed Output</h5>
-              </CardHeader>
-              <CardBody>
-                <OutputImage processedImageUrl={processedImageUrl} />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <Row>
+        {/* <Row>
           <Col lg="4">
             <Card className="card-chart">
               <CardHeader>
@@ -635,7 +636,7 @@ function Dashboard(props) {
               </CardBody>
             </Card>
           </Col>
-        </Row>
+        </Row> */}
       </div>
     </>
   );

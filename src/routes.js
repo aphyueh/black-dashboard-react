@@ -22,7 +22,7 @@ import UserProfile from "views/UserProfile.js";
 var routes = [
   {
     path: "/dashboard",
-    name: "Dashboard",
+    name: "Color Cast Removal",
     icon: "tim-icons icon-chart-pie-36",
     component: <Dashboard />,
     layout: "/admin",

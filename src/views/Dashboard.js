@@ -15,12 +15,13 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React , { useState } from "react";
+import React , { useState , useRef } from "react";
 // nodejs library that concatenates classes
 import classNames from "classnames";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import OutputImage from "./OutputImage";
+import NotificationAlert from "react-notification-alert";
 
 
 // reactstrap components
@@ -60,10 +61,30 @@ function Dashboard(props) {
   const setBgChartData = (name) => {
     setbigChartData(name);
   };
+  const [progress, setProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
-
+  const notificationAlertRef = useRef(null);
+  const notify = (type, message) => {
+    const options = {
+      place: "br", // bottom right
+      message: (
+        <div>
+          <div>
+            <b>{type === "success" ? "Success - " : "Error - "}</b>
+            {message}
+          </div>
+        </div>
+      ),
+      type: type, // "success" or "danger"
+      icon: "tim-icons icon-bell-55",
+      autoDismiss: 5,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };  
+  
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -85,26 +106,46 @@ function Dashboard(props) {
     const formData = new FormData();
     formData.append("image", uploadedImage);
 
-    const res = await fetch(`${backendUrl}/api/process`, {
-      method: "POST",
-      body: formData,
-    });
+    // const res = await fetch(`${backendUrl}/api/process`, {
+    //   method: "POST",
+    //   body: formData,
+    // });
   
-    const data = await res.json();
-    setProcessedImageUrl(data.after_url);
-    setUploadedImageUrl(data.before_url);
+    // const data = await res.json();
+    // setProcessedImageUrl(localUrl);
+    // setUploadedImageUrl(localUrl);
+
+    setIsProcessing(true);
+    setProgress(0);
+
+    // Fake progress simulation
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90; // stop at 90% until backend finishes
+        }
+        return prev + 5;
+      });
+    }, 300);
   
-    // try {
-    //   const response = await axios.post(`${backendUrl}/api/process`, formData, {
-    //     headers: { "Content-Type": "multipart/form-data" },
-    //   });
-    //   console.log("Got the response")
-    //   const { before_url, after_url } = response.data;
-    //   setUploadedImageUrl(before_url);       // Optional if you want to refresh to cloud URL
-    //   setProcessedImageUrl(after_url);
-    // } catch (error) {
-    //   console.error("Processing failed:", error);
-    // }
+    try {
+      const response = await axios.post(`${backendUrl}/api/process`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log("Got the response")
+      const { after_url } = response.data;
+      setProcessedImageUrl(after_url);
+      setProgress(100); // complete  
+      notify("success", "Image processed successfully.");
+    } catch (error) {
+      console.error("Processing failed:", error);
+      setProcessedImageUrl(uploadedImageUrl);
+      setProgress(0);
+      notify("danger", "Image processing failed.");
+    } finally {
+      setTimeout(() => setIsProcessing(false), 5000);
+    }
   };
   
   return (
@@ -164,6 +205,15 @@ function Dashboard(props) {
               </CardHeader>
               <CardBody>
                 <OutputImage processedImageUrl={processedImageUrl} />
+                {isProcessing && (
+                  <div className="progress mt-3" style={{ height: "10px" }}>
+                    <div
+                      className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                      role="progressbar"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                )}
               </CardBody>
             </Card>
           </Col>
@@ -248,6 +298,10 @@ function Dashboard(props) {
             </Card>
           </Col>
         </Row>
+        <div className="react-notification-alert-container">
+          <NotificationAlert ref={notificationAlertRef} />
+        </div>
+
         {/* <Row>
           <Col lg="4">
             <Card className="card-chart">

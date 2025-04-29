@@ -116,25 +116,17 @@ black-dashboard-react
     │   ├── Footer
     │   │   └── Footer.js
     │   ├── Navbars
-    │   │   ├── AdminNavbar.js
-    │   │   └── RTLNavbar.js
+    │   │   └── AdminNavbar.js
     │   └── Sidebar
     │       └── Sidebar.js
     ├── layouts
     │   ├── Admin
     │   │   └── Admin.js
-    │   └── RTL
-    │       └── RTL.js
     ├── variables
     │   └── charts.js
     └── views
         ├── Dashboard.js
-        ├── Icons.js
-        ├── Map.js
         ├── Notifications.js
-        ├── Rtl.js
-        ├── TableList.js
-        ├── Typography.js
         └── UserProfile.js
 ```
 

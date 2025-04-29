@@ -84,18 +84,27 @@ function Dashboard(props) {
   
     const formData = new FormData();
     formData.append("image", uploadedImage);
+
+    const res = await fetch("/api/process", {
+      method: "POST",
+      body: formData,
+    });
   
-    try {
-      const response = await axios.post(`${backendUrl}/api/process`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log("Got the response")
-      const { before_url, after_url } = response.data;
-      setUploadedImageUrl(before_url);       // Optional if you want to refresh to cloud URL
-      setProcessedImageUrl(after_url);
-    } catch (error) {
-      console.error("Processing failed:", error);
-    }
+    const data = await res.json();
+    setProcessedImageUrl(data.after_url);
+    setUploadedImageUrl(data.before_url);
+  
+    // try {
+    //   const response = await axios.post(`${backendUrl}/api/process`, formData, {
+    //     headers: { "Content-Type": "multipart/form-data" },
+    //   });
+    //   console.log("Got the response")
+    //   const { before_url, after_url } = response.data;
+    //   setUploadedImageUrl(before_url);       // Optional if you want to refresh to cloud URL
+    //   setProcessedImageUrl(after_url);
+    // } catch (error) {
+    //   console.error("Processing failed:", error);
+    // }
   };
   
   return (
@@ -182,7 +191,7 @@ function Dashboard(props) {
           </Col>
         </Row>
         <Row>
-          <Col lg="4">
+          <Col lg="6" md="12">
             <Card>
               <CardHeader>
                 <h5 className="card-category">Upload Images</h5>
@@ -227,7 +236,7 @@ function Dashboard(props) {
               </CardBody>
             </Card>
           </Col>
-          <Col lg="4">
+          <Col lg="6" md="12">
             <Card>
               <CardHeader>
                 <h5 className="card-category">Processed Output</h5>

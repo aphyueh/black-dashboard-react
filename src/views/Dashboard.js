@@ -42,6 +42,8 @@ import {
   UncontrolledTooltip,
 } from "reactstrap";
 
+import axios from "axios";
+
 // core components
 import {
   chartExample1,
@@ -55,6 +57,42 @@ function Dashboard(props) {
   const setBgChartData = (name) => {
     setbigChartData(name);
   };
+  const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
+  const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const response = await axios.post("https://backend-1005035431569.asia-southeast1.run.app/api/process", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        const { before_url, after_url } = response.data; 
+
+      setUploadedImageUrl(before_url);
+      setProcessedImageUrl(after_url);
+
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleImageUpload({ target: { files: e.dataTransfer.files } });
+  };
+
+
   return (
     <>
       <div className="content">
@@ -140,10 +178,54 @@ function Dashboard(props) {
         </Row>
         <Row>
           <Col lg="4">
+            <Card>
+              <CardHeader>
+                <h5 className="card-category">Upload Images</h5>
+              </CardHeader>
+              <CardBody>
+                <div style={{
+                  border: "2px dashed #ccc",
+                  borderRadius: "10px",
+                  padding: "20px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  height: "300px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                }}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById("fileInput").click()}
+              >
+                {uploadedImageUrl ? (
+                  <img
+                    src={uploadedImageUrl}
+                    alt="Uploaded"
+                    style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                  />
+                ) : (
+                  <p>Drag & Drop or Click to Upload</p>
+                )}
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleImageUpload}
+                />
+              </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg="4">
             <Card className="card-chart">
               <CardHeader>
                 <h5 className="card-category">Total Shipments</h5>
-                <CardTitle tag="h3">
+<CardTitle tag="h3">
                   <i className="tim-icons icon-bell-55 text-info" /> 763,215
                 </CardTitle>
               </CardHeader>
@@ -189,11 +271,11 @@ function Dashboard(props) {
                   <Line
                     data={chartExample4.data}
                     options={chartExample4.options}
-                  />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
+                />
+              </div>
+            </CardBody>
+          </Card>
+        </Col>
         </Row>
         <Row>
           <Col lg="6" md="12">

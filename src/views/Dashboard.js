@@ -15,11 +15,13 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React , { useState } from "react";
 // nodejs library that concatenates classes
 import classNames from "classnames";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
+import OutputImage from "./OutputImage";
+
 
 // reactstrap components
 import {
@@ -53,46 +55,49 @@ import {
 } from "variables/charts.js";
 
 function Dashboard(props) {
+  const backendUrl = process.env.REACT_APP_API_URL;
   const [bigChartData, setbigChartData] = React.useState("data1");
   const setBgChartData = (name) => {
     setbigChartData(name);
   };
+  const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      try {
-        const response = await axios.post("https://backend-1005035431569.asia-southeast1.run.app/api/process", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        const { before_url, after_url } = response.data; 
-
-      setUploadedImageUrl(before_url);
-      setProcessedImageUrl(after_url);
-
-      } catch (error) {
-        console.error("Upload failed:", error);
-      }
+      setUploadedImage(file); // save file for later processing
+      const localUrl = URL.createObjectURL(file);
+      setUploadedImageUrl(localUrl);
     }
   };
-
   const handleDragOver = (e) => {
     e.preventDefault();
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     handleImageUpload({ target: { files: e.dataTransfer.files } });
   };
-
-
+  const handleProcessImage = async () => {
+    if (!uploadedImage) return;
+  
+    const formData = new FormData();
+    formData.append("image", uploadedImage);
+  
+    try {
+      const response = await axios.post(`${backendUrl}/api/process`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log("Got the response")
+      const { before_url, after_url } = response.data;
+      setUploadedImageUrl(before_url);       // Optional if you want to refresh to cloud URL
+      setProcessedImageUrl(after_url);
+    } catch (error) {
+      console.error("Processing failed:", error);
+    }
+  };
+  
   return (
     <>
       <div className="content">
@@ -216,6 +221,19 @@ function Dashboard(props) {
                   onChange={handleImageUpload}
                 />
               </div>
+              <Button onClick={handleProcessImage} color="primary" className="mt-3">
+                Process
+              </Button>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col lg="4">
+            <Card>
+              <CardHeader>
+                <h5 className="card-category">Processed Output</h5>
+              </CardHeader>
+              <CardBody>
+                <OutputImage processedImageUrl={processedImageUrl} />
               </CardBody>
             </Card>
           </Col>

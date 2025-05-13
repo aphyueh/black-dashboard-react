@@ -15,14 +15,13 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React , { useState , useRef } from "react";
-// nodejs library that concatenates classes
+import axios from "axios";
 import classNames from "classnames";
-// react plugin used to create charts
+import React , { useState , useRef } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import OutputImage from "./OutputImage";
 import NotificationAlert from "react-notification-alert";
-
+import Settings from "./Settings";
 
 // reactstrap components
 import {
@@ -45,8 +44,6 @@ import {
   UncontrolledTooltip,
 } from "reactstrap";
 
-import axios from "axios";
-
 // core components
 import {
   chartExample1,
@@ -67,6 +64,21 @@ function Dashboard(props) {
   const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
   const notificationAlertRef = useRef(null);
+
+  // HISTORY
+  const [imageHistory, setImageHistory] = useState([]);
+
+  // slider params
+  const [params, setParams] = useState({
+    brightness: 100,
+    noise:       0,
+    contrast:   100,
+  });
+
+  const handleParamChange = (name, value) => {
+    setParams(prev => ({ ...prev, [name]: value }));
+  };
+
   const notify = (type, message) => {
     const options = {
       place: "br", // bottom right
@@ -102,18 +114,22 @@ function Dashboard(props) {
   };
   const handleProcessImage = async () => {
     if (!uploadedImage) return;
-  
+
+    if (imageHistory.length >= 10) {
+      notify("danger", "Image upload limit reached (max 10 images).");
+      return;
+    }  
+    
+    const {
+      brightness = 100,
+      noise      = 0,
+      contrast   = 100,
+    } = params;
     const formData = new FormData();
     formData.append("image", uploadedImage);
-
-    // const res = await fetch(`${backendUrl}/api/process`, {
-    //   method: "POST",
-    //   body: formData,
-    // });
-  
-    // const data = await res.json();
-    // setProcessedImageUrl(localUrl);
-    // setUploadedImageUrl(localUrl);
+    formData.append('brightness', brightness);
+    formData.append('noise',      noise);
+    formData.append('contrast',   contrast);
 
     setIsProcessing(true);
     setProgress(0);
@@ -128,6 +144,8 @@ function Dashboard(props) {
         return prev + 5;
       });
     }, 300);
+
+
   
     try {
       const response = await axios.post(`${backendUrl}/api/process`, formData, {
@@ -138,6 +156,11 @@ function Dashboard(props) {
       setProcessedImageUrl(after_url);
       setProgress(100); // complete  
       notify("success", "Image processed successfully.");
+      setImageHistory(prev => [...prev, {
+        name: uploadedImage.name,
+        before: uploadedImageUrl,
+        after: after_url
+      }]);
     } catch (error) {
       console.error("Processing failed:", error);
       setProcessedImageUrl(uploadedImageUrl);
@@ -153,12 +176,28 @@ function Dashboard(props) {
       <div className="content">
         
         <Row>
-          <Col lg="6" md="12">
+          <Col lg="4" md="12">
             <Card>
               <CardHeader>
-                <h5 className="card-category">Upload Images</h5>
+                <Row className="align-items-center">
+                  <Col>
+                    <h5 className="card-category">Upload Images</h5>
+                  </Col>
+                  <Col className="text-right">
+                    <Button onClick={() => document.getElementById("fileInput").click()}>
+                      Upload
+                    </Button>
+                  </Col>
+                </Row>
               </CardHeader>
               <CardBody>
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleImageUpload}
+                />
                 <div style={{
                   border: "2px dashed #ccc",
                   borderRadius: "10px",
@@ -184,27 +223,45 @@ function Dashboard(props) {
                 ) : (
                   <p>Drag & Drop or Click to Upload</p>
                 )}
-                <input
-                  type="file"
-                  id="fileInput"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={handleImageUpload}
-                />
               </div>
-              <Button onClick={handleProcessImage} color="primary" className="mt-3">
+              {uploadedImage && (
+                <div className="text-center mt-2 text-muted">
+                  Filename: <strong>{uploadedImage.name}</strong>
+                </div>
+              )}
+              <Button onClick={handleProcessImage} color="primary" className="mt-3 w-100">
                 Process
               </Button>
               </CardBody>
+
             </Card>
           </Col>
-          <Col lg="6" md="12">
+          <Col lg="8" md="12">
             <Card>
               <CardHeader>
+              <Row className="align-items-center">
+                <Col>
                 <h5 className="card-category">Processed Output</h5>
+                </Col>
+                <Col className="text-right">
+                  <Button
+                      color="success"
+                      href={processedImageUrl}
+                      download
+                      disabled={!processedImageUrl}
+                    >
+                      Download Processed Image
+                  </Button>
+                </Col>
+                </Row>
               </CardHeader>
               <CardBody>
                 <OutputImage processedImageUrl={processedImageUrl} />
+                {processedImageUrl && (
+                  <div className="text-center mt-2 text-muted">
+                    Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
+                  </div>
+                )}
                 {isProcessing && (
                   <div className="progress mt-3" style={{ height: "10px" }}>
                     <div
@@ -214,10 +271,83 @@ function Dashboard(props) {
                     ></div>
                   </div>
                 )}
+                {/* ─── SETTINGS ──────── */}
+                <Settings
+                  brightness={params.brightness}
+                  noise={params.noise}
+                  contrast={params.contrast}
+                  onChange={handleParamChange}
+                />
               </CardBody>
             </Card>
           </Col>
         </Row>
+        <Row>
+          <Col md="12">
+            <Card>
+              <CardHeader>
+              <Row className="align-items-center">
+                <Col>
+                  <h5 className="card-category mb-0">History (Last 10 Processed Images)</h5>
+                </Col>
+                <Col className="text-right">
+                  <Button
+                    color="danger"
+                    size="sm"
+                    onClick={() => setImageHistory([])}
+                    disabled={imageHistory.length === 0}
+                  >
+                    Clear History
+                  </Button>
+                </Col>
+              </Row>
+              </CardHeader>
+              <CardBody>
+                {imageHistory.length === 0 ? (
+                  <p className="text-muted">No images processed yet.</p>
+                ) : (
+                  <Table responsive>
+                    <thead>
+                      <tr>
+                        <th style={{ width: "40px" }}>#</th>
+                        <th>Filename</th>
+                        <th>Before</th>
+                        <th>After</th>
+                        <th style={{ width: "50px" }}></th> {/* Empty header for download button */}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {imageHistory.map((img, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{img.name}</td>
+                          <td>
+                            <img src={img.before} alt="before" width="100" />
+                          </td>
+                          <td>
+                            <img src={img.after} alt="after" width="100" />
+                          </td>
+                          <td>
+                            <Button
+                              color="success"
+                              size="sm"
+                              href={img.after}
+                              download
+                              disabled={!img.after}
+                            >
+                              Download
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+
         <Row>
           <Col xs="12">
             <Card className="card-chart">

@@ -68,15 +68,35 @@ function Dashboard(props) {
   // HISTORY
   const [imageHistory, setImageHistory] = useState([]);
 
-  // slider params
-  const [params, setParams] = useState({
-    brightness: 100,
-    noise:       0,
-    contrast:   100,
+  const [adjustParams, setAdjustParams] = useState({
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    temperature: 0
   });
-
-  const handleParamChange = (name, value) => {
-    setParams(prev => ({ ...prev, [name]: value }));
+  const [adjustedImageUrl, setAdjustedImageUrl] = useState(null);
+  
+  const handleAdjustChange = (param, value) => {
+    const newParams = { ...adjustParams, [param]: value };
+    setAdjustParams(newParams);
+  
+    if (!uploadedImage) return;
+  
+    const formData = new FormData();
+    formData.append('image', uploadedImage);
+    formData.append('brightness', newParams.brightness);
+    formData.append('contrast', newParams.contrast);
+    formData.append('saturation', newParams.saturation);
+    formData.append('temperature', newParams.temperature);
+  
+    fetch('/api/adjust', {
+      method: 'POST',
+      body: formData,
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        setAdjustedImageUrl(URL.createObjectURL(blob));
+      });
   };
 
   const notify = (type, message) => {
@@ -125,6 +145,7 @@ function Dashboard(props) {
       noise      = 0,
       contrast   = 100,
     } = params;
+
     const formData = new FormData();
     formData.append("image", uploadedImage);
     formData.append('brightness', brightness);
@@ -144,8 +165,6 @@ function Dashboard(props) {
         return prev + 5;
       });
     }, 300);
-
-
   
     try {
       const response = await axios.post(`${backendUrl}/api/process`, formData, {
@@ -256,7 +275,11 @@ function Dashboard(props) {
                 </Row>
               </CardHeader>
               <CardBody>
-                <OutputImage processedImageUrl={processedImageUrl} />
+                <OutputImage
+                  processedImageUrl={processedImageUrl}
+                  adjustedImageUrl={adjustedImageUrl}
+                  mode={viewMode} // e.g. 'processed' or 'adjusted'
+                />
                 {processedImageUrl && (
                   <div className="text-center mt-2 text-muted">
                     Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
@@ -272,12 +295,7 @@ function Dashboard(props) {
                   </div>
                 )}
                 {/* ─── SETTINGS ──────── */}
-                <Settings
-                  brightness={params.brightness}
-                  noise={params.noise}
-                  contrast={params.contrast}
-                  onChange={handleParamChange}
-                />
+                <Settings settings={adjustParams} onChange={handleAdjustChange} />
               </CardBody>
             </Card>
           </Col>
@@ -347,7 +365,6 @@ function Dashboard(props) {
             </Card>
           </Col>
         </Row>
-
         <Row>
           <Col xs="12">
             <Card className="card-chart">

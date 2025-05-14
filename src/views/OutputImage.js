@@ -1,21 +1,27 @@
 // OutputImage.js
 import React from "react";
 
-const OutputImage = ({ processedImageUrl }) => {
+const OutputImage = ({ processedImageUrl, adjustedImageUrl, mode = 'adjusted' }) => {
+  const imageToDisplay =
+    mode === 'processed' ? processedImageUrl : adjustedImageUrl;
+
   return (
     <div>
-      <h5 className="card-category">Processed Image</h5>
-      {processedImageUrl ? (
+      <h5 className="card-category">
+        {mode === 'processed' ? 'Processed Image' : 'Adjusted Image'}
+      </h5>
+      {imageToDisplay ? (
         <img
-          src={processedImageUrl}
-          alt="Processed"
+          src={imageToDisplay}
+          alt={mode === 'processed' ? "Processed" : "Adjusted"}
           style={{ width: "100%", maxHeight: "300px", objectFit: "contain" }}
         />
       ) : (
-        <p>No processed image yet</p>
+        <p>No {mode} image yet</p>
       )}
     </div>
   );
 };
+
 
 export default OutputImage;

@@ -1,48 +1,31 @@
 // src/views/Settings.js
-import React from 'react';
+import React from "react";
 
-export default function Settings({ brightness, noise, contrast, onChange }) {
+export default function Settings({ settings, onChange }) {
+  const sliders = [
+    { label: "Brightness", key: "brightness" },
+    { label: "Contrast", key: "contrast" },
+    { label: "Saturation", key: "saturation" },
+    { label: "Temperature", key: "temperature" },
+  ];
+
   return (
     <div className="settings-panel">
-      <div className="slider-group">
-        <label>
-          Brightness: {brightness}%
-          <input
-            type="range"
-            min="0"
-            max="200"
-            step="1"
-            value={brightness}
-            onChange={e => onChange('brightness', Number(e.target.value))}
-          />
-        </label>
-      </div>
-      <div className="slider-group">
-        <label>
-          Noise Level: {noise}%
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            value={noise}
-            onChange={e => onChange('noise', Number(e.target.value))}
-          />
-        </label>
-      </div>
-      <div className="slider-group">
-        <label>
-          Contrast: {contrast}%
-          <input
-            type="range"
-            min="0"
-            max="200"
-            step="1"
-            value={contrast}
-            onChange={e => onChange('contrast', Number(e.target.value))}
-          />
-        </label>
-      </div>
+      {sliders.map(({ label, key }) => (
+        <div className="slider-group" key={key}>
+          <label>
+            {label}: {settings[key]}
+            <input
+              type="range"
+              min={-100}
+              max={100}
+              step={1}
+              value={settings[key]}
+              onChange={(e) => onChange(key, Number(e.target.value))}
+            />
+          </label>
+        </div>
+      ))}
     </div>
   );
 }

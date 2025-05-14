@@ -12,18 +12,27 @@ export default function Settings({ settings, onChange }) {
   return (
     <div className="settings-panel">
       {sliders.map(({ label, key }) => (
-        <div className="slider-group" key={key}>
-          <label>
-            {label}: {settings[key]}
-            <input
-              type="range"
-              min={-100}
-              max={100}
-              step={1}
-              value={settings[key]}
-              onChange={(e) => onChange(key, Number(e.target.value))}
-            />
-          </label>
+        <div
+          className="d-flex align-items-center mb-3"
+          key={key}
+          style={{ gap: "1rem" }}
+        >
+          {/* Label */}
+          <div style={{ width: "100px", fontWeight: "500" }}>{label}</div>
+
+          {/* Slider */}
+          <input
+            type="range"
+            min={-100}
+            max={100}
+            step={1}
+            value={settings[key]}
+            onChange={(e) => onChange(key, Number(e.target.value))}
+            style={{ flexGrow: 1 }}
+          />
+
+          {/* Value */}
+          <div style={{ width: "40px", textAlign: "right" }}>{settings[key]}</div>
         </div>
       ))}
     </div>

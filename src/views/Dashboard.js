@@ -147,18 +147,9 @@ function Dashboard(props) {
       notify("danger", "Image upload limit reached (max 10 images).");
       return;
     }  
-    
-    const {
-      brightness = 100,
-      noise      = 0,
-      contrast   = 100,
-    } = params;
 
     const formData = new FormData();
     formData.append("image", uploadedImage);
-    formData.append('brightness', brightness);
-    formData.append('noise',      noise);
-    formData.append('contrast',   contrast);
 
     setIsProcessing(true);
     setProgress(0);
@@ -270,47 +261,40 @@ function Dashboard(props) {
                 <Col>
                 <h5 className="card-category">Processed Output</h5>
                 </Col>
-                <Col className="text-right">
-                  <Button
-                      color="success"
-                      href={processedImageUrl}
-                      download
-                      disabled={!processedImageUrl}
-                    >
-                      Download Processed Image
-                  </Button>
-                </Col>
                 </Row>
               </CardHeader>
               <CardBody>
                 {/* Mode toggle buttons */}
-                <div className="d-flex justify-content-center mb-2">
-                  <button
-                    className={`btn btn-sm ${viewMode === "processed" ? "btn-primary" : "btn-outline-primary"} me-2`}
-                    onClick={() => setViewMode("processed")}
-                    disabled={!processedImageUrl}
-                  >
-                    View Processed
-                  </button>
-                  <button
-                    className={`btn btn-sm ${viewMode === "adjusted" ? "btn-primary" : "btn-outline-primary"}`}
-                    onClick={() => setViewMode("adjusted")}
-                    disabled={!adjustedImageUrl}
-                  >
-                    View Adjusted
-                  </button>
-                  {viewMode === "adjusted" && (
-                    <button
-                      className="btn btn-sm btn-warning mt-2"
-                      onClick={() => {
-                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
-                        setViewMode("processed");
-                      }}
+                <Col sm="6">
+                  <ButtonGroup className="btn-group-toggle mb-3" data-toggle="buttons">
+                    <Button
+                      tag="label"
+                      color="info"
+                      size="sm"
+                      className={classNames("btn-simple", { active: viewMode === "processed" })}
+                      onClick={() => setViewMode("processed")}
+                      disabled={!processedImageUrl}
                     >
-                      Reset Adjustments
-                    </button>
-                  )}
-                </div>
+                      <span className="d-none d-sm-block d-md-block">View Processed</span>
+                      <span className="d-block d-sm-none">
+                        <i className="tim-icons icon-image-02" />
+                      </span>
+                    </Button>
+                    <Button
+                      tag="label"
+                      color="info"
+                      size="sm"
+                      className={classNames("btn-simple", { active: viewMode === "adjusted" })}
+                      onClick={() => setViewMode("adjusted")}
+                      disabled={!adjustedImageUrl}
+                    >
+                      <span className="d-none d-sm-block d-md-block">View Adjusted</span>
+                      <span className="d-block d-sm-none">
+                        <i className="tim-icons icon-settings" />
+                      </span>
+                    </Button>
+                  </ButtonGroup>
+                </Col>
                 {/* Image Display */}
                 <OutputImage
                   processedImageUrl={processedImageUrl}
@@ -331,6 +315,40 @@ function Dashboard(props) {
                     ></div>
                   </div>
                 )}
+                <Col className="text-right">
+                  <Button
+                      color="success"
+                      href={processedImageUrl}
+                      download
+                      disabled={!processedImageUrl}
+                    >
+                      Download Image
+                  </Button>
+                </Col>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Row className="align-items-center">
+                  <Col>
+                    <CardTitle tag="h2" className="mb-0">Adjustments</CardTitle>
+                  </Col>
+                  <Col className="text-right">
+                    <Button
+                      size="sm"
+                      color="warning"
+                      onClick={() => {
+                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
+                        setViewMode("processed");
+                      }}
+                      disabled={!processedImageUrl} // Optional: disable when no image
+                    >
+                      Reset
+                    </Button>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
                 {/* ─── SETTINGS ──────── */}
                 <Settings settings={adjustParams} onChange={handleAdjustChange} />
               </CardBody>

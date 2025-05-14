@@ -66,8 +66,10 @@ function Dashboard(props) {
   const notificationAlertRef = useRef(null);
 
   // HISTORY
+  const [viewMode, setViewMode] = useState("processed");
+  
+  // ADJUSTMENT
   const [imageHistory, setImageHistory] = useState([]);
-
   const [adjustParams, setAdjustParams] = useState({
     brightness: 0,
     contrast: 0,
@@ -95,8 +97,14 @@ function Dashboard(props) {
     })
       .then(res => res.blob())
       .then(blob => {
-        setAdjustedImageUrl(URL.createObjectURL(blob));
-      });
+        const blobUrl = URL.createObjectURL(blob);
+        setAdjustedImageUrl(blobUrl);
+
+      // 👇 Auto-switch to adjusted view
+      if (viewMode !== "adjusted") {
+        setViewMode("adjusted");
+      }
+    });
   };
 
   const notify = (type, message) => {
@@ -275,6 +283,35 @@ function Dashboard(props) {
                 </Row>
               </CardHeader>
               <CardBody>
+                {/* Mode toggle buttons */}
+                <div className="d-flex justify-content-center mb-2">
+                  <button
+                    className={`btn btn-sm ${viewMode === "processed" ? "btn-primary" : "btn-outline-primary"} me-2`}
+                    onClick={() => setViewMode("processed")}
+                    disabled={!processedImageUrl}
+                  >
+                    View Processed
+                  </button>
+                  <button
+                    className={`btn btn-sm ${viewMode === "adjusted" ? "btn-primary" : "btn-outline-primary"}`}
+                    onClick={() => setViewMode("adjusted")}
+                    disabled={!adjustedImageUrl}
+                  >
+                    View Adjusted
+                  </button>
+                  {viewMode === "adjusted" && (
+                    <button
+                      className="btn btn-sm btn-warning mt-2"
+                      onClick={() => {
+                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
+                        setViewMode("processed");
+                      }}
+                    >
+                      Reset Adjustments
+                    </button>
+                  )}
+                </div>
+                {/* Image Display */}
                 <OutputImage
                   processedImageUrl={processedImageUrl}
                   adjustedImageUrl={adjustedImageUrl}

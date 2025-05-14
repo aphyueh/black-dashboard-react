@@ -78,7 +78,7 @@ function Dashboard(props) {
   });
   const [adjustedImageUrl, setAdjustedImageUrl] = useState(null);
   
-  const handleAdjustChange = (param, value) => {
+  const handleAdjustChange = async (param, value) => {
     const newParams = { ...adjustParams, [param]: value };
     setAdjustParams(newParams);
   
@@ -91,20 +91,25 @@ function Dashboard(props) {
     formData.append('saturation', newParams.saturation);
     formData.append('temperature', newParams.temperature);
   
-    fetch('/api/adjust', {
-      method: 'POST',
-      body: formData,
-    })
-      .then(res => res.blob())
-      .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        setAdjustedImageUrl(blobUrl);
-
-      // 👇 Auto-switch to adjusted view
+    try {
+      const response = await axios.post(`${backendUrl}/api/adjust`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        responseType: "blob", // key part
+      });
+  
+      const blob = response.data;
+      const blobUrl = URL.createObjectURL(blob);
+      setAdjustedImageUrl(blobUrl);
+  
+      // Auto-switch to adjusted view
       if (viewMode !== "adjusted") {
         setViewMode("adjusted");
       }
-    });
+  
+    } catch (error) {
+      console.error("Adjustment failed:", error);
+      notify("danger", "Image adjustment failed.");
+    }
   };
 
   const notify = (type, message) => {
@@ -179,6 +184,13 @@ function Dashboard(props) {
         before: uploadedImageUrl,
         after: after_url
       }]);
+      // Convert processed image URL to File
+      const blob = await fetch(after_url).then(r => r.blob());
+      const processedFile = new File([blob], "processed.png", { type: blob.type });
+
+      // Fetch histograms
+      await fetchHistograms(uploadedImage, processedFile);
+
     } catch (error) {
       console.error("Processing failed:", error);
       setProcessedImageUrl(uploadedImageUrl);
@@ -188,6 +200,29 @@ function Dashboard(props) {
       setTimeout(() => setIsProcessing(false), 5000);
     }
   };
+
+  const [inputHistogram, setInputHistogram] = useState(null);
+  const [outputHistogram, setOutputHistogram] = useState(null);
+
+  const fetchHistograms = async (original, processed) => {
+    const formDataOriginal = new FormData();
+    formDataOriginal.append("image", original);
+
+    const formDataProcessed = new FormData();
+    formDataProcessed.append("image", processed);
+
+    try {
+      const [originalRes, processedRes] = await Promise.all([
+        axios.post(`${backendUrl}/api/histogram`, formDataOriginal),
+        axios.post(`${backendUrl}/api/histogram`, formDataProcessed),
+      ]);
+      setInputHistogram(originalRes.data);
+      setOutputHistogram(processedRes.data);
+    } catch (err) {
+      console.error("Error fetching histograms:", err);
+    }
+  };
+
   
   return (
     <>
@@ -426,75 +461,57 @@ function Dashboard(props) {
               <CardHeader>
                 <Row>
                   <Col className="text-left" sm="6">
-                    <h5 className="card-category">Total Shipments</h5>
-                    <CardTitle tag="h2">Performance</CardTitle>
-                  </Col>
-                  <Col sm="6">
-                    <ButtonGroup
-                      className="btn-group-toggle float-right"
-                      data-toggle="buttons"
-                    >
-                      <Button
-                        tag="label"
-                        className={classNames("btn-simple", {
-                          active: bigChartData === "data1",
-                        })}
-                        color="info"
-                        id="0"
-                        size="sm"
-                        onClick={() => setBgChartData("data1")}
-                      >
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Accounts
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-single-02" />
-                        </span>
-                      </Button>
-                      <Button
-                        color="info"
-                        id="1"
-                        size="sm"
-                        tag="label"
-                        className={classNames("btn-simple", {
-                          active: bigChartData === "data2",
-                        })}
-                        onClick={() => setBgChartData("data2")}
-                      >
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Purchases
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-gift-2" />
-                        </span>
-                      </Button>
-                      <Button
-                        color="info"
-                        id="2"
-                        size="sm"
-                        tag="label"
-                        className={classNames("btn-simple", {
-                          active: bigChartData === "data3",
-                        })}
-                        onClick={() => setBgChartData("data3")}
-                      >
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Sessions
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-tap-02" />
-                        </span>
-                      </Button>
-                    </ButtonGroup>
+                    <h5 className="card-category">Color Distribution</h5>
+                    <CardTitle tag="h2">RGB Histogram</CardTitle>
                   </Col>
                 </Row>
               </CardHeader>
               <CardBody>
                 <div className="chart-area">
-                  <Line
-                    data={chartExample1[bigChartData]}
-                    options={chartExample1.options}
-                  />
+                <Bar
+                  data={{
+                    labels: Array.from({ length: 256 }, (_, i) => i),
+                    datasets: [
+                      {
+                        label: "Red (Input)",
+                        data: inputHistogram?.r || [],
+                        backgroundColor: "rgba(255, 99, 132, 0.5)",
+                      },
+                      {
+                        label: "Green (Input)",
+                        data: inputHistogram?.g || [],
+                        backgroundColor: "rgba(75, 192, 192, 0.5)",
+                      },
+                      {
+                        label: "Blue (Input)",
+                        data: inputHistogram?.b || [],
+                        backgroundColor: "rgba(54, 162, 235, 0.5)",
+                      },
+                      {
+                        label: "Red (Output)",
+                        data: outputHistogram?.r || [],
+                        backgroundColor: "rgba(255, 99, 132, 0.2)",
+                      },
+                      {
+                        label: "Green (Output)",
+                        data: outputHistogram?.g || [],
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
+                      },
+                      {
+                        label: "Blue (Output)",
+                        data: outputHistogram?.b || [],
+                        backgroundColor: "rgba(54, 162, 235, 0.2)",
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    scales: {
+                      x: { title: { display: true, text: 'Pixel Intensity' } },
+                      y: { title: { display: true, text: 'Frequency' } },
+                    },
+                  }}
+                />
                 </div>
               </CardBody>
             </Card>

@@ -66,10 +66,10 @@ function Dashboard(props) {
   const notificationAlertRef = useRef(null);
 
   // HISTORY
-  const [viewMode, setViewMode] = useState("processed");
+  const [imageHistory, setImageHistory] = useState([]);
   
   // ADJUSTMENT
-  const [imageHistory, setImageHistory] = useState([]);
+  const [viewMode, setViewMode] = useState("processed");
   const [adjustParams, setAdjustParams] = useState({
     brightness: 0,
     contrast: 0,
@@ -77,12 +77,14 @@ function Dashboard(props) {
     temperature: 0
   });
   const [adjustedImageUrl, setAdjustedImageUrl] = useState(null);
+  const [hasAdjusted, setHasAdjusted] = useState(false);
   
   const handleAdjustChange = async (param, value) => {
     const newParams = { ...adjustParams, [param]: value };
     setAdjustParams(newParams);
   
     if (!uploadedImage) return;
+    if (!hasAdjusted) setHasAdjusted(true);
   
     const formData = new FormData();
     formData.append('image', uploadedImage);
@@ -173,6 +175,10 @@ function Dashboard(props) {
     try {
       const response = await axios.post(`${backendUrl}/api/process`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setProgress(percentCompleted);
+        },
       });
       console.log("Got the response")
       const { after_url } = response.data;
@@ -184,13 +190,19 @@ function Dashboard(props) {
         before: uploadedImageUrl,
         after: after_url
       }]);
-      // Convert processed image URL to File
-      const blob = await fetch(after_url).then(r => r.blob());
-      const processedFile = new File([blob], "processed.png", { type: blob.type });
-
-      // Fetch histograms
-      await fetchHistograms(uploadedImage, processedFile);
-
+      // Fetch processed image for histogram
+      try {
+        const fetchResponse = await fetch(after_url, { mode: "cors" });
+        if (!fetchResponse.ok) {
+          throw new Error(`Failed to fetch processed image: ${fetchResponse.statusText}`);
+        }
+        const blob = await fetchResponse.blob();
+        const processedFile = new File([blob], "processed.png", { type: blob.type });
+        await fetchHistograms(uploadedImage, processedFile);
+      } catch (fetchError) {
+        console.error("Failed to fetch processed image for histogram:", fetchError);
+        notify("danger", "Failed to load processed image for histogram generation.");
+      }
     } catch (error) {
       console.error("Processing failed:", error);
       setProcessedImageUrl(uploadedImageUrl);
@@ -223,18 +235,16 @@ function Dashboard(props) {
     }
   };
 
-  
   return (
     <>
       <div className="content">
-        
         <Row>
           <Col lg="4" md="12">
             <Card>
               <CardHeader>
                 <Row className="align-items-center">
                   <Col>
-                    <h5 className="card-category">Upload Images</h5>
+                    <CardTitle tag="h2">Upload Your Image</CardTitle>
                   </Col>
                   <Col className="text-right">
                     <Button onClick={() => document.getElementById("fileInput").click()}>
@@ -286,82 +296,171 @@ function Dashboard(props) {
                 Process
               </Button>
               </CardBody>
-
             </Card>
           </Col>
           <Col lg="8" md="12">
             <Card>
               <CardHeader>
-              <Row className="align-items-center">
-                <Col>
-                <h5 className="card-category">Processed Output</h5>
-                </Col>
-                </Row>
-              </CardHeader>
+                <Row className="align-items-center">
+                    <Col>
+                      <CardTitle tag="h2">Color Cast Removed</CardTitle>
+                    </Col>
+                    <Col className="text-right">
+                      <ButtonGroup className="btn-group-toggle mb-3" data-toggle="buttons">
+                        <Button
+                          tag="label"
+                          color="info"
+                          size="sm"
+                          className={classNames("btn-simple", { active: viewMode === "processed" })}
+                          onClick={() => setViewMode("processed")}
+                          disabled={!processedImageUrl}
+                          >
+                          <span className="d-none d-sm-block d-md-block">View Processed</span>
+                          <span className="d-block d-sm-none">
+                            <i className="tim-icons icon-image-02" />
+                          </span>
+                        </Button>
+                        <Button
+                          tag="label"
+                          color="info"
+                          size="sm"
+                          className={classNames("btn-simple", { active: viewMode === "adjusted" })}
+                          onClick={() => setViewMode("adjusted")}
+                          disabled={!hasAdjusted || !adjustedImageUrl}
+                          >
+                          <span className="d-none d-sm-block d-md-block">View Adjusted</span>
+                          <span className="d-block d-sm-none">
+                            <i className="tim-icons icon-settings" />
+                          </span>
+                        </Button>
+                      </ButtonGroup>
+                    </Col>
+                  </Row>
+                </CardHeader>
               <CardBody>
-                {/* Mode toggle buttons */}
-                <Col sm="6">
-                  <ButtonGroup className="btn-group-toggle mb-3" data-toggle="buttons">
-                    <Button
-                      tag="label"
-                      color="info"
-                      size="sm"
-                      className={classNames("btn-simple", { active: viewMode === "processed" })}
-                      onClick={() => setViewMode("processed")}
-                      disabled={!processedImageUrl}
-                    >
-                      <span className="d-none d-sm-block d-md-block">View Processed</span>
-                      <span className="d-block d-sm-none">
-                        <i className="tim-icons icon-image-02" />
-                      </span>
-                    </Button>
-                    <Button
-                      tag="label"
-                      color="info"
-                      size="sm"
-                      className={classNames("btn-simple", { active: viewMode === "adjusted" })}
-                      onClick={() => setViewMode("adjusted")}
-                      disabled={!adjustedImageUrl}
-                    >
-                      <span className="d-none d-sm-block d-md-block">View Adjusted</span>
-                      <span className="d-block d-sm-none">
-                        <i className="tim-icons icon-settings" />
-                      </span>
-                    </Button>
-                  </ButtonGroup>
-                </Col>
-                {/* Image Display */}
-                <OutputImage
-                  processedImageUrl={processedImageUrl}
-                  adjustedImageUrl={adjustedImageUrl}
-                  mode={viewMode} // e.g. 'processed' or 'adjusted'
-                />
+                <div
+                  style={{
+                    border: "2px dashed #ccc",
+                    borderRadius: "10px",
+                    padding: "20px",
+                    textAlign: "center",
+                    height: "300px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                >
+                  <OutputImage
+                    processedImageUrl={processedImageUrl}
+                    adjustedImageUrl={adjustedImageUrl}
+                    mode={viewMode} // e.g. 'processed' or 'adjusted'
+                    hasAdjusted={hasAdjusted}
+                  />
+                </div>
                 {processedImageUrl && (
                   <div className="text-center mt-2 text-muted">
                     Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
                   </div>
                 )}
-                {isProcessing && (
-                  <div className="progress mt-3" style={{ height: "10px" }}>
-                    <div
-                      className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                      role="progressbar"
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                )}
-                <Col className="text-right">
-                  <Button
-                      color="success"
-                      href={processedImageUrl}
-                      download
-                      disabled={!processedImageUrl}
-                    >
-                      Download Image
-                  </Button>
-                </Col>
+                <div className="progress mt-3" style={{ height: "10px" }}>
+                  <div
+                    className={`progress-bar ${isProcessing ? "progress-bar-striped progress-bar-animated" : ""} bg-info`}
+                    role="progressbar"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+                <Row>
+                  <Col className="text-right">
+                    <Button
+                        color="success"
+                        href={viewMode === "adjusted" ? adjustedImageUrl : processedImageUrl}
+                        download
+                        disabled={
+                          viewMode === "adjusted"
+                            ? !adjustedImageUrl
+                            : !processedImageUrl
+                        }
+                      >
+                        Download Image
+                    </Button>
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg="4" md="12">
+            <Card className="card-chart">
+              <CardHeader>
+                <Row>
+                  <Col className="text-left" sm="6">
+                    <h5 className="card-category">Color Distribution</h5>
+                    <CardTitle tag="h2">RGB Histogram</CardTitle>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <div className="chart-area" style={{ height: "400px", padding: "1rem" }}>
+                <Bar
+                  data={{
+                    labels: Array.from({ length: 256 }, (_, i) => i),
+                    datasets: [
+                      {
+                        label: "Red (Input)",
+                        data: inputHistogram?.r || [],
+                        backgroundColor: "rgba(255, 99, 132, 0.8)",
+                      },
+                      {
+                        label: "Green (Input)",
+                        data: inputHistogram?.g || [],
+                        backgroundColor: "rgba(75, 192, 192, 0.8)",
+                      },
+                      {
+                        label: "Blue (Input)",
+                        data: inputHistogram?.b || [],
+                        backgroundColor: "rgba(54, 162, 235, 0.8)",
+                      },
+                      {
+                        label: "Red (Output)",
+                        data: outputHistogram?.r || [],
+                        backgroundColor: "rgba(255, 99, 132, 0.4)",
+                      },
+                      {
+                        label: "Green (Output)",
+                        data: outputHistogram?.g || [],
+                        backgroundColor: "rgba(75, 192, 192, 0.4)",
+                      },
+                      {
+                        label: "Blue (Output)",
+                        data: outputHistogram?.b || [],
+                        backgroundColor: "rgba(54, 162, 235, 0.4)",
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      x: { title: { display: true, text: 'Pixel Intensity', color: "#ccc" } },
+                      y: { title: { display: true, text: 'Frequency', color: "#ccc" } },
+                    },
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: "#ccc"  // makes legend text pop
+                        }
+                      }
+                    }
+                  }}
+                />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col lg="8" md="12">
             <Card>
               <CardHeader>
                 <Row className="align-items-center">
@@ -391,24 +490,24 @@ function Dashboard(props) {
           </Col>
         </Row>
         <Row>
-          <Col md="12">
-            <Card>
+          <Card>
               <CardHeader>
-              <Row className="align-items-center">
-                <Col>
-                  <h5 className="card-category mb-0">History (Last 10 Processed Images)</h5>
-                </Col>
-                <Col className="text-right">
-                  <Button
-                    color="danger"
-                    size="sm"
-                    onClick={() => setImageHistory([])}
-                    disabled={imageHistory.length === 0}
-                  >
-                    Clear History
-                  </Button>
-                </Col>
-              </Row>
+                <Row>
+                  <Col className="text-left" sm="6">
+                    <h5 className="card-category">Last 10 Processed Images</h5>
+                    <CardTitle tag="h2">History</CardTitle>
+                  </Col>
+                  <Col className="text-right">
+                    <Button
+                      color="danger"
+                      size="sm"
+                      onClick={() => setImageHistory([])}
+                      disabled={imageHistory.length === 0}
+                    >
+                      Clear History
+                    </Button>
+                  </Col>
+                </Row>
               </CardHeader>
               <CardBody>
                 {imageHistory.length === 0 ? (
@@ -418,7 +517,7 @@ function Dashboard(props) {
                     <thead>
                       <tr>
                         <th style={{ width: "40px" }}>#</th>
-                        <th>Filename</th>
+                        <th className="filename-cell">Filename</th>
                         <th>Before</th>
                         <th>After</th>
                         <th style={{ width: "50px" }}></th> {/* Empty header for download button */}
@@ -428,7 +527,7 @@ function Dashboard(props) {
                       {imageHistory.map((img, index) => (
                         <tr key={index}>
                           <td>{index + 1}</td>
-                          <td>{img.name}</td>
+                          <td className="filename-cell">{img.name}</td>
                           <td>
                             <img src={img.before} alt="before" width="100" />
                           </td>
@@ -453,69 +552,6 @@ function Dashboard(props) {
                 )}
               </CardBody>
             </Card>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs="12">
-            <Card className="card-chart">
-              <CardHeader>
-                <Row>
-                  <Col className="text-left" sm="6">
-                    <h5 className="card-category">Color Distribution</h5>
-                    <CardTitle tag="h2">RGB Histogram</CardTitle>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                <Bar
-                  data={{
-                    labels: Array.from({ length: 256 }, (_, i) => i),
-                    datasets: [
-                      {
-                        label: "Red (Input)",
-                        data: inputHistogram?.r || [],
-                        backgroundColor: "rgba(255, 99, 132, 0.5)",
-                      },
-                      {
-                        label: "Green (Input)",
-                        data: inputHistogram?.g || [],
-                        backgroundColor: "rgba(75, 192, 192, 0.5)",
-                      },
-                      {
-                        label: "Blue (Input)",
-                        data: inputHistogram?.b || [],
-                        backgroundColor: "rgba(54, 162, 235, 0.5)",
-                      },
-                      {
-                        label: "Red (Output)",
-                        data: outputHistogram?.r || [],
-                        backgroundColor: "rgba(255, 99, 132, 0.2)",
-                      },
-                      {
-                        label: "Green (Output)",
-                        data: outputHistogram?.g || [],
-                        backgroundColor: "rgba(75, 192, 192, 0.2)",
-                      },
-                      {
-                        label: "Blue (Output)",
-                        data: outputHistogram?.b || [],
-                        backgroundColor: "rgba(54, 162, 235, 0.2)",
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    scales: {
-                      x: { title: { display: true, text: 'Pixel Intensity' } },
-                      y: { title: { display: true, text: 'Frequency' } },
-                    },
-                  }}
-                />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
         </Row>
         <div className="react-notification-alert-container">
           <NotificationAlert ref={notificationAlertRef} />
@@ -526,7 +562,7 @@ function Dashboard(props) {
             <Card className="card-chart">
               <CardHeader>
                 <h5 className="card-category">Total Shipments</h5>
-<CardTitle tag="h3">
+                <CardTitle tag="h3">
                   <i className="tim-icons icon-bell-55 text-info" /> 763,215
                 </CardTitle>
               </CardHeader>

@@ -45,12 +45,12 @@ import {
 } from "reactstrap";
 
 // core components
-import {
-  chartExample1,
-  chartExample2,
-  chartExample3,
-  chartExample4,
-} from "variables/charts.js";
+// import {
+//   chartExample1,
+//   chartExample2,
+//   chartExample3,
+//   chartExample4,
+// } from "variables/charts.js";
 
 function Dashboard(props) {
   const backendUrl = process.env.REACT_APP_API_URL;
@@ -160,17 +160,6 @@ function Dashboard(props) {
 
     setIsProcessing(true);
     setProgress(0);
-
-    // Fake progress simulation
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 90; // stop at 90% until backend finishes
-        }
-        return prev + 5;
-      });
-    }, 300);
   
     try {
       const response = await axios.post(`${backendUrl}/api/process`, formData, {
@@ -244,7 +233,7 @@ function Dashboard(props) {
               <CardHeader>
                 <Row className="align-items-center">
                   <Col>
-                    <CardTitle tag="h2">Upload Your Image</CardTitle>
+                    <CardTitle tag="h2">Upload Image</CardTitle>
                   </Col>
                   <Col className="text-right">
                     <Button onClick={() => document.getElementById("fileInput").click()}>
@@ -349,7 +338,6 @@ function Dashboard(props) {
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
-                    backgroundColor: "#f8f9fa",
                   }}
                 >
                   <OutputImage
@@ -370,8 +358,28 @@ function Dashboard(props) {
                     role="progressbar"
                     style={{ width: `${progress}%` }}
                   ></div>
+                   <div className="ml-2" style={{ minWidth: "40px", textAlign: "right" }}>
+                    {progress}%
+                  </div>
                 </div>
-                <Row>
+                <Row className="align-items-center">
+                  <Col>
+                    <h5 className="card-category">Further edit image before download</h5>
+                    <h2  className="mb-0">Adjustments</h2>
+                  </Col>
+                  <Col className="text-right">
+                    <Button
+                      size="sm"
+                      color="warning"
+                      onClick={() => {
+                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
+                        setViewMode("processed");
+                      }}
+                      disabled={!processedImageUrl} // Optional: disable when no image
+                    >
+                      Reset
+                    </Button>
+                  </Col>
                   <Col className="text-right">
                     <Button
                         color="success"
@@ -387,12 +395,16 @@ function Dashboard(props) {
                     </Button>
                   </Col>
                 </Row>
+                <Row>
+                  {/* ─── SETTINGS ──────── */}
+                  <Settings settings={adjustParams} onChange={handleAdjustChange} />
+                </Row>
               </CardBody>
             </Card>
           </Col>
         </Row>
         <Row>
-          <Col lg="4" md="12">
+          {/* <Col lg="4" md="12"> */}
             <Card className="card-chart">
               <CardHeader>
                 <Row>
@@ -459,36 +471,8 @@ function Dashboard(props) {
                 </div>
               </CardBody>
             </Card>
-          </Col>
-          <Col lg="8" md="12">
-            <Card>
-              <CardHeader>
-                <Row className="align-items-center">
-                  <Col>
-                    <CardTitle tag="h2" className="mb-0">Adjustments</CardTitle>
-                  </Col>
-                  <Col className="text-right">
-                    <Button
-                      size="sm"
-                      color="warning"
-                      onClick={() => {
-                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
-                        setViewMode("processed");
-                      }}
-                      disabled={!processedImageUrl} // Optional: disable when no image
-                    >
-                      Reset
-                    </Button>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody>
-                {/* ─── SETTINGS ──────── */}
-                <Settings settings={adjustParams} onChange={handleAdjustChange} />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
+          {/* </Col> */}
+         </Row>
         <Row>
           <Card>
               <CardHeader>
@@ -542,7 +526,10 @@ function Dashboard(props) {
                               download
                               disabled={!img.after}
                             >
-                              Download
+                            <span className="d-none d-sm-block d-md-block">Download</span>
+                            <span className="d-block d-sm-none">
+                              <i className="tim-icons icon-cloud-download-93" />
+                            </span>
                             </Button>
                           </td>
                         </tr>

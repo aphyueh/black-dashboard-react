@@ -233,7 +233,7 @@ function Dashboard(props) {
               <CardHeader>
                 <Row className="align-items-center">
                   <Col>
-                    <CardTitle tag="h2">Upload Image</CardTitle>
+                    <CardTitle tag="h3">Upload Image</CardTitle>
                   </Col>
                   <Col className="text-right">
                     <Button onClick={() => document.getElementById("fileInput").click()}>
@@ -292,7 +292,7 @@ function Dashboard(props) {
               <CardHeader>
                 <Row className="align-items-center">
                     <Col>
-                      <CardTitle tag="h2">Color Cast Removed</CardTitle>
+                      <CardTitle tag="h2">Color Cast Removal</CardTitle>
                     </Col>
                     <Col className="text-right">
                       <ButtonGroup className="btn-group-toggle mb-3" data-toggle="buttons">
@@ -340,18 +340,35 @@ function Dashboard(props) {
                     overflow: "hidden",
                   }}
                 >
-                  <OutputImage
+                  {/* <OutputImage
                     processedImageUrl={processedImageUrl}
                     adjustedImageUrl={adjustedImageUrl}
-                    mode={viewMode} // e.g. 'processed' or 'adjusted'
-                    hasAdjusted={hasAdjusted}
-                  />
+                    mode={viewMode}
+                  /> */}
+                  {viewMode === 'processed' && processedImageUrl ? (
+                    <img
+                      src={processedImageUrl}
+                      alt="Processed"
+                      style={{ width: "100%", maxHeight: "300px", objectFit: "contain" }}
+                    />
+                  ) : viewMode === 'adjusted' && adjustedImageUrl ? (
+                    <img
+                      src={adjustedImageUrl}
+                      alt="Adjusted"
+                      style={{ width: "100%", maxHeight: "300px", objectFit: "contain" }}
+                    />
+                  ) : (
+                    <p>No {viewMode} image yet</p>
+                  )}
                 </div>
+                <Row>
                 {processedImageUrl && (
                   <div className="text-center mt-2 text-muted">
                     Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
                   </div>
                 )}
+                </Row>
+                <Row>
                 <div className="progress mt-3" style={{ height: "10px" }}>
                   <div
                     className={`progress-bar ${isProcessing ? "progress-bar-striped progress-bar-animated" : ""} bg-info`}
@@ -362,10 +379,15 @@ function Dashboard(props) {
                     {progress}%
                   </div>
                 </div>
-                <Row className="align-items-center">
+                </Row>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Row className="align-items-center mt-4 mb-3">
                   <Col>
                     <h5 className="card-category">Further edit image before download</h5>
-                    <h2  className="mb-0">Adjustments</h2>
+                    <h4 tag="h4" className="mb-0">Adjustments</h4>
                   </Col>
                   <Col className="text-right">
                     <Button
@@ -395,10 +417,10 @@ function Dashboard(props) {
                     </Button>
                   </Col>
                 </Row>
-                <Row>
-                  {/* ─── SETTINGS ──────── */}
-                  <Settings settings={adjustParams} onChange={handleAdjustChange} />
-                </Row>
+              </CardHeader>
+              <CardBody>
+                {/* ─── SETTINGS ──────── */}
+                <Settings settings={adjustParams} onChange={handleAdjustChange} />
               </CardBody>
             </Card>
           </Col>

@@ -51,6 +51,7 @@ function Dashboard(props) {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
+  const [processedFilename, setProcessedFilename] = React.useState(null);
   const notificationAlertRef = useRef(null);
 
   // HISTORY
@@ -85,12 +86,12 @@ function Dashboard(props) {
     formData.append('temperature', newParams.temperature);
   
     try {
-      const response = await axios.post(`${backendUrl}/api/adjust`, formData, {
+      const adjustResponse = await axios.post(`${backendUrl}/api/adjust`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob", // key part
       });
   
-      const blob = response.data;
+      const blob = adjustResponse.data;
       const blobUrl = URL.createObjectURL(blob);
       setAdjustedImageUrl(blobUrl);
   
@@ -181,9 +182,19 @@ function Dashboard(props) {
       });
       console.log("Got the response")
       const afterBlob = response.data;
+      // Extract filename from Content-Disposition header
+      const disposition = response.headers["content-disposition"];
+      let filename = "processed_image.png"; // fallback
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
       const afterUrl = URL.createObjectURL(afterBlob);
       // const { after_url } = response.data; // gcs bucket url
       setProcessedImageUrl(afterUrl); // after_url
+      setProcessedFilename(filename)
       setProgress(100); // complete  
       notify("success", "Image processed successfully.");
       setImageHistory(prev => [...prev, {
@@ -397,9 +408,9 @@ function Dashboard(props) {
                     <p>No {viewMode} image yet</p>
                   )}
                 </div>
-                {processedImageUrl && (
+                {processedImageUrl && processedFilename && (
                   <div className="text-center mt-2 text-muted">
-                    Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
+                    Filename: <strong>{processedFilename}</strong>
                   </div>
                 )}
                 <Row className="mt-3 px-3 w-100">

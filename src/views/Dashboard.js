@@ -19,7 +19,6 @@ import axios from "axios";
 import classNames from "classnames";
 import React , { useState , useRef } from "react";
 import { Line, Bar } from "react-chartjs-2";
-import OutputImage from "./OutputImage";
 import NotificationAlert from "react-notification-alert";
 import Settings from "./Settings";
 
@@ -44,20 +43,9 @@ import {
   UncontrolledTooltip,
 } from "reactstrap";
 
-// core components
-// import {
-//   chartExample1,
-//   chartExample2,
-//   chartExample3,
-//   chartExample4,
-// } from "variables/charts.js";
-
 function Dashboard(props) {
   const backendUrl = process.env.REACT_APP_API_URL;
-  const [bigChartData, setbigChartData] = React.useState("data1");
-  const setBgChartData = (name) => {
-    setbigChartData(name);
-  };
+
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -85,9 +73,12 @@ function Dashboard(props) {
   
     if (!uploadedImage) return;
     if (!hasAdjusted) setHasAdjusted(true);
+
+    const imageResponse = await fetch(processedImageUrl);
+    const imageBlob = await imageResponse.blob();
   
     const formData = new FormData();
-    formData.append('image', uploadedImage);
+    formData.append('image', imageBlob);
     formData.append('brightness', newParams.brightness);
     formData.append('contrast', newParams.contrast);
     formData.append('saturation', newParams.saturation);
@@ -114,30 +105,44 @@ function Dashboard(props) {
     }
   };
 
+  // NOTIFICATION
   const notify = (type, message) => {
     const options = {
       place: "br", // bottom right
       message: (
         <div>
           <div>
-            <b>{type === "success" ? "Success - " : "Error - "}</b>
+            <b>
+              {type === "success" ? "Success - " : 
+               type === "danger" ? "Error - " : 
+               type === "info" ? "" : ""}
+            </b>
             {message}
           </div>
         </div>
       ),
       type: type, // "success" or "danger"
-      icon: "tim-icons icon-bell-55",
+      icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
       autoDismiss: 5,
     };
     notificationAlertRef.current.notificationAlert(options);
   };  
   
+  // UPLOAD
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      setUploadedImage(file); // save file for later processing
+      setUploadedImage(file); // Save file for later processing
       const localUrl = URL.createObjectURL(file);
       setUploadedImageUrl(localUrl);
+
+      // Clear previous output & adjustments
+      setProcessedImageUrl(null);
+      setAdjustedImageUrl(null);
+      setHasAdjusted(false);
+      setViewMode("processed");
+      setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
+      setProgress(0);
     }
   };
   const handleDragOver = (e) => {
@@ -147,6 +152,8 @@ function Dashboard(props) {
     e.preventDefault();
     handleImageUpload({ target: { files: e.dataTransfer.files } });
   };
+
+  // PROCESS
   const handleProcessImage = async () => {
     if (!uploadedImage) return;
 
@@ -159,29 +166,34 @@ function Dashboard(props) {
     formData.append("image", uploadedImage);
 
     setIsProcessing(true);
-    setProgress(0);
+    setProgress(10);
+
+    notify("info", `Processing image: ${uploadedImage.name}`);
   
     try {
       const response = await axios.post(`${backendUrl}/api/process`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        responseType: "blob",
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setProgress(percentCompleted);
         },
       });
       console.log("Got the response")
-      const { after_url } = response.data;
-      setProcessedImageUrl(after_url);
+      const afterBlob = response.data;
+      const afterUrl = URL.createObjectURL(afterBlob);
+      // const { after_url } = response.data; // gcs bucket url
+      setProcessedImageUrl(afterUrl); // after_url
       setProgress(100); // complete  
       notify("success", "Image processed successfully.");
       setImageHistory(prev => [...prev, {
         name: uploadedImage.name,
         before: uploadedImageUrl,
-        after: after_url
+        after: afterUrl
       }]);
       // Fetch processed image for histogram
       try {
-        const fetchResponse = await fetch(after_url, { mode: "cors" });
+        const fetchResponse = await fetch(afterUrl, { mode: "cors" });
         if (!fetchResponse.ok) {
           throw new Error(`Failed to fetch processed image: ${fetchResponse.statusText}`);
         }
@@ -202,8 +214,10 @@ function Dashboard(props) {
     }
   };
 
+  // HISTOGRAM
   const [inputHistogram, setInputHistogram] = useState(null);
   const [outputHistogram, setOutputHistogram] = useState(null);
+  const [showSplitHistograms, setShowSplitHistograms] = useState(false);
 
   const fetchHistograms = async (original, processed) => {
     const formDataOriginal = new FormData();
@@ -224,6 +238,26 @@ function Dashboard(props) {
     }
   };
 
+  const histogramOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Pixel Intensity', color: '#ccc' },
+      },
+      y: {
+        title: { display: true, text: 'Frequency', color: '#ccc' },
+      },
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#ccc',
+        },
+      },
+    },
+  };
+
   return (
     <>
       <div className="content">
@@ -237,7 +271,10 @@ function Dashboard(props) {
                   </Col>
                   <Col className="text-right">
                     <Button onClick={() => document.getElementById("fileInput").click()}>
-                      Upload
+                      <span className="d-none d-sm-inline">Upload</span>
+                      <span className="d-inline d-sm-none">
+                        <i className="tim-icons icon-upload" />
+                      </span>
                     </Button>
                   </Col>
                 </Row>
@@ -333,7 +370,6 @@ function Dashboard(props) {
                     borderRadius: "10px",
                     padding: "20px",
                     textAlign: "center",
-                    height: "300px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -361,33 +397,36 @@ function Dashboard(props) {
                     <p>No {viewMode} image yet</p>
                   )}
                 </div>
-                <Row>
                 {processedImageUrl && (
                   <div className="text-center mt-2 text-muted">
                     Filename: <strong>{processedImageUrl.split("/").pop()}</strong>
                   </div>
                 )}
-                </Row>
-                <Row>
-                <div className="progress mt-3" style={{ height: "10px" }}>
-                  <div
-                    className={`progress-bar ${isProcessing ? "progress-bar-striped progress-bar-animated" : ""} bg-info`}
-                    role="progressbar"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                   <div className="ml-2" style={{ minWidth: "40px", textAlign: "right" }}>
-                    {progress}%
-                  </div>
-                </div>
+                <Row className="mt-3 px-3 w-100">
+                  <Col xs="12">
+                    <div className="progress" style={{ height: "10px", width: "100%" }}>
+                      <div
+                        className={`progress-bar ${isProcessing ? "progress-bar-striped progress-bar-animated" : ""} bg-info`}
+                        role="progressbar"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-right">
+                      <small>{progress}%</small>
+                    </div>
+                  </Col>
                 </Row>
               </CardBody>
             </Card>
+          </Col>
+          </Row>
+          <Row>
             <Card>
               <CardHeader>
                 <Row className="align-items-center mt-4 mb-3">
                   <Col>
                     <h5 className="card-category">Further edit image before download</h5>
-                    <h4 tag="h4" className="mb-0">Adjustments</h4>
+                    <CardTitle tag="h4">Adjustments</CardTitle>
                   </Col>
                   <Col className="text-right">
                     <Button
@@ -399,7 +438,8 @@ function Dashboard(props) {
                       }}
                       disabled={!processedImageUrl} // Optional: disable when no image
                     >
-                      Reset
+                    <i className="tim-icons icon-refresh-01 d-inline d-sm-none" /> {/* Show icon only on small screens */}
+                    <span className="d-none d-sm-inline">Reset</span>
                     </Button>
                   </Col>
                   <Col className="text-right">
@@ -413,7 +453,10 @@ function Dashboard(props) {
                             : !processedImageUrl
                         }
                       >
-                        Download Image
+                      <span className="d-none d-sm-block d-md-block">Download Image</span>
+                      <span className="d-block d-sm-none">
+                        <i className="tim-icons icon-cloud-download-93" />
+                      </span>
                     </Button>
                   </Col>
                 </Row>
@@ -423,21 +466,32 @@ function Dashboard(props) {
                 <Settings settings={adjustParams} onChange={handleAdjustChange} />
               </CardBody>
             </Card>
-          </Col>
-        </Row>
+          </Row>
         <Row>
           {/* <Col lg="4" md="12"> */}
-            <Card className="card-chart">
-              <CardHeader>
-                <Row>
-                  <Col className="text-left" sm="6">
-                    <h5 className="card-category">Color Distribution</h5>
-                    <CardTitle tag="h2">RGB Histogram</CardTitle>
-                  </Col>
-                </Row>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area" style={{ height: "400px", padding: "1rem" }}>
+          <Card className="card-chart">
+          <CardHeader>
+            <Row>
+              <Col className="text-left" sm="6">
+                <h5 className="card-category">Color Distribution</h5>
+                <CardTitle tag="h2">RGB Histograms</CardTitle>
+              </Col>
+              <Col className="text-right" sm="6">
+                <Button
+                  size="sm"
+                  color="info"
+                  onClick={() => setShowSplitHistograms(!showSplitHistograms)}
+                  disabled={!processedImageUrl}
+                >
+                  {showSplitHistograms ? "Show Merged Histogram" : "Show Split Histogram"}
+                </Button>
+              </Col>
+            </Row>
+          </CardHeader>
+          <CardBody>
+              {!showSplitHistograms ? (
+                // Merged View
+              <div className="chart-area" style={{ height: "400px", padding: "1rem" }}>
                 <Bar
                   data={{
                     labels: Array.from({ length: 256 }, (_, i) => i),
@@ -474,27 +528,73 @@ function Dashboard(props) {
                       },
                     ],
                   }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      x: { title: { display: true, text: 'Pixel Intensity', color: "#ccc" } },
-                      y: { title: { display: true, text: 'Frequency', color: "#ccc" } },
-                    },
-                    plugins: {
-                      legend: {
-                        labels: {
-                          color: "#ccc"  // makes legend text pop
-                        }
-                      }
-                    }
-                  }}
+                  options={histogramOptions}
                 />
-                </div>
-              </CardBody>
-            </Card>
-          {/* </Col> */}
-         </Row>
+              </div>
+              ) : (
+                // Split View
+                <Row>
+                  <Col md="6">
+                    <h5 className="text-center text-muted">Input Image</h5>
+                    <div className="chart-area" style={{ height: "300px" }}>
+                    <Bar
+                      data={{
+                        labels: Array.from({ length: 256 }, (_, i) => i),
+                        datasets: [
+                          {
+                            label: "Red",
+                            data: inputHistogram?.r || [],
+                            backgroundColor: "rgba(255, 99, 132, 0.8)",
+                          },
+                          {
+                            label: "Green",
+                            data: inputHistogram?.g || [],
+                            backgroundColor: "rgba(75, 192, 192, 0.8)",
+                          },
+                          {
+                            label: "Blue",
+                            data: inputHistogram?.b || [],
+                            backgroundColor: "rgba(54, 162, 235, 0.8)",
+                          },
+                        ],
+                      }}
+                      options={histogramOptions}
+                    />
+                    </div>
+                  </Col>
+                  <Col md="6">
+                    <h5 className="text-center text-muted">Output Image</h5>
+                    <div className="chart-area" style={{ height: "300px" }}>
+                    <Bar
+                      data={{
+                        labels: Array.from({ length: 256 }, (_, i) => i),
+                        datasets: [
+                          {
+                            label: "Red",
+                            data: outputHistogram?.r || [],
+                            backgroundColor: "rgba(255, 99, 132, 0.8)",
+                          },
+                          {
+                            label: "Green",
+                            data: outputHistogram?.g || [],
+                            backgroundColor: "rgba(75, 192, 192, 0.8)",
+                          },
+                          {
+                            label: "Blue",
+                            data: outputHistogram?.b || [],
+                            backgroundColor: "rgba(54, 162, 235, 0.8)",
+                          },
+                        ],
+                      }}
+                      options={histogramOptions}
+                    />
+                    </div>
+                  </Col>
+                </Row>
+              )}
+          </CardBody>
+          </Card>
+        </Row>
         <Row>
           <Card>
               <CardHeader>

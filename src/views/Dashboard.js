@@ -52,6 +52,8 @@ function Dashboard(props) {
   const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
   const [processedFilename, setProcessedFilename] = React.useState(null);
+  const [processedBlob, setProcessedBlob] = useState(null);
+
   const notificationAlertRef = useRef(null);
 
   // HISTORY
@@ -74,12 +76,9 @@ function Dashboard(props) {
   
     if (!uploadedImage) return;
     if (!hasAdjusted) setHasAdjusted(true);
-
-    const imageResponse = await fetch(processedImageUrl);
-    const imageBlob = await imageResponse.blob();
   
     const formData = new FormData();
-    formData.append('image', imageBlob);
+    formData.append('image', processedBlob);
     formData.append('brightness', newParams.brightness);
     formData.append('contrast', newParams.contrast);
     formData.append('saturation', newParams.saturation);
@@ -182,6 +181,7 @@ function Dashboard(props) {
       });
       console.log("Got the response")
       const afterBlob = response.data;
+      setProcessedBlob(afterBlob);
       // Extract filename from Content-Disposition header
       const disposition = response.headers["content-disposition"];
       let filename = "processed_image.png"; // fallback

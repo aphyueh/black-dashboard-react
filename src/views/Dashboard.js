@@ -17,7 +17,7 @@
 */
 import axios from "axios";
 import classNames from "classnames";
-import React , { useState , useRef } from "react";
+import React , { useState , useRef , useEffect } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import NotificationAlert from "react-notification-alert";
 import Settings from "./Settings";
@@ -44,7 +44,21 @@ import {
 } from "reactstrap";
 
 function Dashboard(props) {
+  
   const backendUrl = process.env.REACT_APP_API_URL;
+  useEffect(() => {
+      // 1. Trigger cleanup
+    fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => console.log("Cleanup response:", data))
+    .catch(err => console.error("Cleanup error:", err));
+
+  // 2. Trigger model initialization
+  fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => console.log("Init model response:", data))
+    .catch(err => console.error("Init model error:", err));
+  }, []); // Runs only once on page load/refresh
 
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -182,13 +196,15 @@ function Dashboard(props) {
       console.log("Got the response")
       const afterBlob = response.data;
       setProcessedBlob(afterBlob);
+      console.log("Received Blob:", afterBlob);
       // Extract filename from Content-Disposition header
       const disposition = response.headers["content-disposition"];
       let filename = "processed_image.png"; // fallback
-      if (disposition && disposition.includes("filename=")) {
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) {
-          filename = match[1];
+      if (disposition) {
+        const filenameRegex = /filename[^;=\n]*=(['"]?)([^'"\n]*)\1/;
+        const match = disposition.match(filenameRegex);
+        if (match && match[2]) {
+          filename = match[2];
         }
       }
       const afterUrl = URL.createObjectURL(afterBlob);
@@ -434,7 +450,7 @@ function Dashboard(props) {
           <Row>
             <Card>
               <CardHeader>
-                <Row className="align-items-center mt-4 mb-3">
+                <Row className="align-items-center">
                   <Col>
                     <h5 className="card-category">Further edit image before download</h5>
                     <CardTitle tag="h4">Adjustments</CardTitle>

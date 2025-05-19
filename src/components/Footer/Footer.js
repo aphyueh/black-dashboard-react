@@ -27,7 +27,7 @@ function Footer() {
       <Container fluid>
         <Nav>
           <NavItem>
-            <NavLink href="https://www.creative-tim.com/?ref=bdr-user-archive-footer">
+            <NavLink href="https://github.com/k-cmy/color_cast_removal">
               MDS07's Color Cast Removal Product
             </NavLink>
           </NavItem>

@@ -122,7 +122,7 @@ function Dashboard(props) {
   // NOTIFICATION
   const notify = (type, message) => {
     const options = {
-      place: "br", // bottom right
+      place: "tr", // bottom right
       message: (
         <div>
           <div>
@@ -185,7 +185,8 @@ function Dashboard(props) {
     notify("info", `Processing image: ${uploadedImage.name}`);
   
     try {
-      const response = await axios.post(`${backendUrl}/api/process`, formData, {
+      // const response = await axios.post(`${backendUrl}/api/process`, formData, {
+        const response = await axios.post(`${backendUrl}/api/inference`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
         onUploadProgress: (progressEvent) => {
@@ -199,6 +200,7 @@ function Dashboard(props) {
       console.log("Received Blob:", afterBlob);
       // Extract filename from Content-Disposition header
       const disposition = response.headers["content-disposition"];
+      console.log("disposition", disposition)
       let filename = "processed_image.png"; // fallback
       if (disposition) {
         const filenameRegex = /filename[^;=\n]*=(['"]?)([^'"\n]*)\1/;
@@ -460,8 +462,7 @@ function Dashboard(props) {
                       size="sm"
                       color="warning"
                       onClick={() => {
-                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
-                        setViewMode("processed");
+                        setAdjustedImageUrl(processedImageUrl)
                       }}
                       disabled={!processedImageUrl} // Optional: disable when no image
                     >

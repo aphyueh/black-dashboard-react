@@ -28,17 +28,17 @@ function Footer() {
         <Nav>
           <NavItem>
             <NavLink href="https://www.creative-tim.com/?ref=bdr-user-archive-footer">
-              Creative Tim
+              MDS07's Color Cast Removal Product
             </NavLink>
           </NavItem>
           <NavItem>
-            <NavLink href="https://www.creative-tim.com/presentation?ref=bdr-user-archive-footer">
-              About Us
+            <NavLink href="https://github.com/aphyueh/CCRWebsite">
+              Frontend
             </NavLink>
           </NavItem>
           <NavItem>
-            <NavLink href="https://www.creative-tim.com/blog?ref=bdr-user-archive-footer">
-              Blog
+            <NavLink href="https://github.com/aphyueh/ccrbackend">
+              Backend
             </NavLink>
           </NavItem>
         </Nav>

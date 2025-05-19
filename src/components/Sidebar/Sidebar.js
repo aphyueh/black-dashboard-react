@@ -119,15 +119,34 @@ function Sidebar(props) {
               </div>
             ) : null}
             <Nav>
-              {routes.map((prop, key) => {
-                if (prop.redirect) return null;
-                return (
-                  <li
-                    className={
-                      activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
-                    }
-                    key={key}
-                  >
+            {routes.map((prop, key) => {
+              if (prop.redirect) return null;
+              const isAnchor = prop.path.startsWith("#");
+              return (
+                <li
+                  className={
+                    activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
+                  }
+                  key={key}
+                >
+                  {isAnchor ? (
+                    <a
+                      href={prop.path}
+                      className="nav-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        props.toggleSidebar();
+                        const targetId = prop.path.replace("#", "");
+                        const el = document.getElementById(targetId);
+                        if (el) {
+                          el.scrollIntoView({ behavior: "smooth" });
+                        }
+                      }}
+                    >
+                      <i className={prop.icon} />
+                      <p>{prop.name}</p>
+                    </a>
+                  ) : (
                     <NavLink
                       to={prop.layout + prop.path}
                       className="nav-link"
@@ -136,9 +155,10 @@ function Sidebar(props) {
                       <i className={prop.icon} />
                       <p>{prop.name}</p>
                     </NavLink>
-                  </li>
-                );
-              })}
+                  )}
+                </li>
+              );
+            })}
             </Nav>
           </div>
         </div>

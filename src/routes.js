@@ -28,18 +28,14 @@ var routes = [
     layout: "/admin",
   },
   {
-    path: "/notifications",
-    name: "Notifications",
-    icon: "tim-icons icon-bell-55",
-    component: <Notifications />,
-    layout: "/admin",
+    path: "#rgb-histogram",
+    name: "RGB Histogram",
+    icon: "tim-icons icon-image-02",
   },
   {
-    path: "/user-profile",
-    name: "User Profile",
-    icon: "tim-icons icon-single-02",
-    component: <UserProfile />,
-    layout: "/admin",
+    path: "#history",
+    name: "History",
+    icon: "tim-icons icon-time-alarm",
   },
 ];
 export default routes;

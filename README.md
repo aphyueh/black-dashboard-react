@@ -1,185 +1,150 @@
-# [Black Dashboard React](https://demos.creative-tim.com/black-dashboard-react/#/dashboard) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fdemos.creative-tim.com%2Fblack-dashboard-react%2F%23%2Fadmin%2Fdashboard&text=Black%20Dashboard%20React%20by%20Creative%20Tim%20%7C%20Free%20React%20Admin%20Template&original_referer=https%3A%2F%2Fdemos.creative-tim.com%2Fblack-dashboard-react%2F&via=creativetim&hashtags=react%2Ccreativetim%2Cdark%2Cdashboard%2Cbootstrap%2Creactstrap%2Creactjs)
+# CCRWebsite
 
-![version](https://img.shields.io/badge/version-1.2.2-blue.svg) ![license](https://img.shields.io/badge/license-MIT-blue.svg) [![GitHub issues open](https://img.shields.io/github/issues/creativetimofficial/black-dashboard-react.svg?maxAge=2592000)]() [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/creativetimofficial/black-dashboard-react.svg?maxAge=2592000)]() [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/E4aHAQy)
+CCRWebsite is a frontend user interface for a color cast removal web application. Built with React and styled using the Black Dashboard React template, the UI provides image upload, processing feedback, history tracking, and histogram visualizations, all integrated with a backend server via API calls configured through environment variables.
 
-![Product Gif](./github-assets/black-dashboard-react.gif)
+## ✨ Features
 
-Black Dashboard React is a beautiful [Bootstrap 4](http://getbootstrap.com/), [Reacstrap](https://reactstrap.github.io/) and [React](https://reactjs.org/) ([create-react-app](https://github.com/facebook/create-react-app)) Admin Dashboard with a huge number of components built to fit together and look amazing. If you are looking for a tool to manage and visualize data about your business, this dashboard is the thing for you. It combines colors that are easy on the eye, spacious cards, beautiful typography, and graphics.
-Black Dashboard React comes packed with all plugins that you might need inside a project and documentation on how to get started. It is light and easy to use, and also very powerful.
+- **Image Upload and Color Cast Removal**
+  - Upload any image from your local device.
+  - Send it to the backend API for automated color cast removal.
+  - Processed image is returned and displayed with comparison.
 
-Black Dashboard React features over 16 individual components, giving you the freedom of choosing and combining. This means that there are thousands of possible combinations. All components can take variations in color, that you can easily modify using SASS files. You will save a lot of time going from prototyping to full-functional code because all elements are implemented.
-We thought about everything, so this dashboard comes with 2 versions, Dark Mode and Light Mode.
+- **Notifications System**
+  - In-app alerts for:
+    - ⚙️ *Processing Info*: Displays when image processing starts.
+    - ✅ *Success*: Indicates successful image processing.
+    - ❌ *Error*: Shown when backend fails to respond or processing fails.
 
-Special thanks go for the owners of these plugins:
+- **History Tracking**
+  - View the last 10 uploaded and processed image results.
+  - Includes thumbnails for input and output images.
+  - Re-access any of the recent images without re-uploading.
 
-- [Perfect Scrollbar](http://utatti.github.io/perfect-scrollbar/) for the nice scrollbars for windows.
-- [React Chartjs](http://jerairrest.github.io/react-chartjs-2/) for the wonderful wrapper for charts.
-- [Chartjs](https://www.chartjs.org/) for the wonderful charts.
+- **RGB Histogram Visualization**
+  - Toggleable histograms comparing input vs output images.
+  - Displays Red, Green, and Blue channel distribution curves.
+  - Useful for evaluating the effect of color cast removal.
 
-We are very excited to share this dashboard with you and we look forward to hearing your feedback!
+- **Responsive Dashboard UI**
+  - Clean layout with side navigation.
+  - Mobile-friendly, responsive design.
+  - Dark-themed interface.
 
-**Example Pages** We wanted to fully display the power of this dashboard, so the kit comes packed with examples showing you how to use the components.
+## 📁 Project Structure
 
-## Table of Contents
+```plaintext
+CCRWebsite/
+├── public/                 # Static assets
+├── src/
+│   ├── assets/             # Logo, images
+│   ├── components/         # Image cards, sliders, histograms, notifications
+│   ├── layouts/            # Main dashboard layout
+│   ├── views/
+│   │   ├── Dashboard.js    # Main page with upload, compare, histogram
+│   │   ├── History.js      # History page with last 10 processed images
+│   │   └── Notifications.js# Notification triggers and handlers
+│   └── index.js            # App entry point
+├── .env                    # Backend API base URL
+├── Dockerfile              # Docker deployment file
+├── package.json            # Project metadata and scripts
+├── genezio.yaml            # Genezio deployment settings
+└── README.md               # You're here!
 
-- [Versions](#versions)
-- [Demo](#demo)
-- [Quick Start](#quick-start)
-- [Deploy](#deploy)
-- [Documentation](#documentation)
-- [File Structure](#file-structure)
-- [Browser Support](#browser-support)
-- [Resources](#resources)
-- [Reporting Issues](#reporting-issues)
-- [Technical Support or Questions](#technical-support-or-questions)
-- [Licensing](#licensing)
-- [Useful Links](#useful-links)
+Getting Started
+Prerequisites
+Node.js (v14+ recommended)
 
-## Versions
+npm (v6+)
 
-[<img src="./github-assets/html.png" width="60" height="60" />](https://www.creative-tim.com/product/black-dashboard)
-[<img src="./github-assets/react.svg" width="60" height="60" />](https://www.creative-tim.com/product/black-dashboard-react)[<img src="./github-assets/vuejs.png" width="60" height="60" />](https://www.creative-tim.com/product/vue-black-dashboard)
+Installation
+Clone the Repository
 
-| HTML                                                                                                                                                                | React                                                                                                                                                                   | Vue                                                                                                                                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Black Dashboard HTML](https://s3.amazonaws.com/creativetim_bucket/products/93/thumb/opt_bd_thumbnail.jpg)](https://www.creative-tim.com/product/black-dashboard) | [![Black Dashboard React](https://s3.amazonaws.com/creativetim_bucket/products/136/thumb/opt_bd_react.jpg)](https://www.creative-tim.com/product/black-dashboard-react) | [![Vue Black Dashboard](https://s3.amazonaws.com/creativetim_bucket/products/99/thumb/opt_bd_vue_thumbnail.jpg)](https://www.creative-tim.com/product/vue-black-dashboard) |
+bash
+Copy code
+git clone https://github.com/aphyueh/CCRWebsite.git
+cd CCRWebsite
+Install Dependencies
 
-## Demo
+bash
+Copy code
+npm install
+Environment Setup
 
-| Dashboard                                                                                                             | User Profile                                                                                                            | Tables                                                                                                               | Maps                                                                                                       | Notification                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [![Start page](./github-assets/dashboard-page.png)](https://demos.creative-tim.com/black-dashboard-react/#/dashboard) | [![User profile page](./github-assets/user-page.png)](https://demos.creative-tim.com/black-dashboard-react/#/user-page) | [![Tables page ](./github-assets/table-page.png)](https://demos.creative-tim.com/black-dashboard-react/#/table-list) | [![Maps Page](./github-assets/maps-page.png)](https://demos.creative-tim.com/black-dashboard-react/#/maps) | [![Notification page](./github-assets/notifications-page.png)](https://demos.creative-tim.com/black-dashboard-react/#/notifications) |
+Create a .env file in the project root with the following:
 
-[View More](https://demos.creative-tim.com/black-dashboard-react/#/dashboard).
+env
+Copy code
+REACT_APP_API_BASE_URL=http://your-backend-url.com
+Replace with your actual backend API base URL.
 
-## Quick start
+Run Locally
 
-Quick start options:
+bash
+Copy code
+npm start
+Visit http://localhost:3000 in your browser.
 
-- Clone the repo: `git clone https://github.com/creativetimofficial/black-dashboard-react.git`.
-- [Download from Github](https://github.com/creativetimofficial/black-dashboard-react/archive/master.zip).
-- [Download from Creative Tim](https://www.creative-tim.com/product/black-dashboard-react).
+🐳 Docker Deployment
+Build and run the application using Docker:
 
-## Deploy
+bash
+Copy code
+docker build -t ccrwebsite .
+docker run -p 80:80 ccrwebsite
+Then navigate to http://localhost in your browser.
 
-:rocket: You can deploy your own version of the template to Genezio with one click:
+🚀 Genezio Deployment
+If using Genezio:
 
-[![Deploy to Genezio](https://raw.githubusercontent.com/Genez-io/graphics/main/svg/deploy-button.svg)](https://app.genez.io/start/deploy?repository=https://github.com/creativetimofficial/black-dashboard-react&utm_source=github&utm_medium=referral&utm_campaign=github-creativetim&utm_term=deploy-project&utm_content=button-head)
+bash
+Copy code
+genezio deploy
+Requires the Genezio CLI to be installed and configured.
 
-## Documentation
+📦 Scripts
+npm start – Run in development mode.
 
-The documentation for the Black Dashboard React is hosted at our [website](https://demos.creative-tim.com/black-dashboard-react/#/documentation/tutorial).
+npm run build – Compile and optimize for production.
 
-## File Structure
+npm test – Launch test runner.
 
-Within the download you'll find the following directories and files:
+npm run eject – Eject CRA config (use with caution).
 
-```
-black-dashboard-react
-.
-├── package.json
-├── CHANGELOG.md
-├── ISSUE_TEMPLATE.md
-├── LICENSE.md
-├── README.md
-├── Documentation
-│   └── documentation.html
-├── github-assets
-│   └── react.svg
-├── public
-│   ├── index.html
-│   └── manifest.json
-└── src
-    ├── index.js
-    ├── logo-white.svg
-    ├── logo.svg
-    ├── routes.js
-    ├── assets
-    │   ├── css
-    │   ├── demo
-    │   ├── fonts
-    │   ├── img
-    │   └── scss
-    │       ├── black-dashboard
-    │       │   ├── bootstrap
-    │       │   │   ├── mixins
-    │       │   │   └── utilities
-    │       │   ├── custom
-    │       │   │   ├── cards
-    │       │   │   ├── mixins
-    │       │   │   ├── utilities
-    │       │   │   └── vendor
-    │       └── black-dashboard.scss
-    ├── components
-    │   ├── FixedPlugin
-    │   │   └── FixedPlugin.js
-    │   ├── Footer
-    │   │   └── Footer.js
-    │   ├── Navbars
-    │   │   └── AdminNavbar.js
-    │   └── Sidebar
-    │       └── Sidebar.js
-    ├── layouts
-    │   ├── Admin
-    │   │   └── Admin.js
-    ├── variables
-    │   └── charts.js
-    └── views
-        ├── Dashboard.js
-        ├── Notifications.js
-        └── UserProfile.js
-```
+📊 Advanced Features
+✅ Notifications
+Real-time alerts guide the user during interactions:
 
-## Browser Support
+Info: Image is being processed.
 
-At present, we officially aim to support the last two versions of the following browsers:
+Success: Output image received.
 
-<img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/chrome.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/firefox.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/edge.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/safari.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/opera.png" width="64" height="64">
+Error: Failed request or unexpected result.
 
-## Resources
+Implemented using the react-notification-alert package.
 
-- Demo: https://demos.creative-tim.com/black-dashboard-react/#/dashboard
-- Download Page: https://www.creative-tim.com/product/black-dashboard-react
-- Documentation: https://demos.creative-tim.com/black-dashboard-react/#/documentation/tutorial
-- License Agreement: https://www.creative-tim.com/license
-- Support: https://www.creative-tim.com/contact-us
-- Issues: [Github Issues Page](https://github.com/creativetimofficial/black-dashboard-react/issues)
+🕓 Image History (Last 10)
+Maintains a local state record of the 10 most recent image processing sessions.
 
-## Reporting Issues
+Stored in memory during the session.
 
-We use GitHub Issues as the official bug tracker for the Black Dashboard React. Here are some advices for our users that want to report an issue:
+Available on the "History" page.
 
-1. Make sure that you are using the latest version of the Black Dashboard React. Check the CHANGELOG from your dashboard on our [website](https://www.creative-tim.com/).
-2. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
-3. Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
+🌈 RGB Histogram
+Uses canvas rendering to draw histograms of R/G/B values.
 
-## Technical Support or Questions
+Visually compare image channels before and after processing.
 
-If you have questions or need help integrating the product please [contact us](https://www.creative-tim.com/contact-us) instead of opening an issue.
+Accessible via the toggle in the dashboard.
 
-## Licensing
+📜 License
+This project is licensed under the MIT License.
 
-- Copyright 2023 Creative Tim (https://www.creative-tim.com)
-- Licensed under MIT (https://github.com/creativetimofficial/black-dashboard-react/blob/master/LICENSE.md)
+## Acknowledgements
+- Black Dashboard React
 
-## Useful Links
+- React
 
-More products from Creative Tim: <https://www.creative-tim.com/products>
+- Bootstrap 4
 
-Tutorials: <https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w>
+Reactstrap
 
-Freebies: <https://www.creative-tim.com/products>
-
-Affiliate Program (earn money): <https://www.creative-tim.com/affiliates/new>
-
-Social Media:
-
-Twitter: <https://twitter.com/CreativeTim>
-
-Facebook: <https://www.facebook.com/CreativeTim>
-
-Dribbble: <https://dribbble.com/creativetim>
-
-Google+: <https://plus.google.com/+CreativetimPage>
-
-Instagram: <https://instagram.com/creativetimofficial>

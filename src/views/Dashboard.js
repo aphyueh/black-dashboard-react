@@ -68,8 +68,7 @@ function Dashboard(props) {
   const [processedFilename, setProcessedFilename] = React.useState(null);
   const [processedBlob, setProcessedBlob] = useState(null);
 
-  const notificationAlertRef = useRef(null);
-
+  
   // HISTORY
   const [imageHistory, setImageHistory] = useState([]);
   
@@ -87,39 +86,42 @@ function Dashboard(props) {
   const handleAdjustChange = async (param, value) => {
     const newParams = { ...adjustParams, [param]: value };
     setAdjustParams(newParams);
-  
+    
     if (!uploadedImage) return;
     if (!hasAdjusted) setHasAdjusted(true);
-  
+    
     const formData = new FormData();
     formData.append('image', processedBlob);
     formData.append('brightness', newParams.brightness);
     formData.append('contrast', newParams.contrast);
     formData.append('saturation', newParams.saturation);
     formData.append('temperature', newParams.temperature);
-  
+    
     try {
       const adjustResponse = await axios.post(`${backendUrl}/api/adjust`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob", // key part
       });
-  
+      
       const blob = adjustResponse.data;
       const blobUrl = URL.createObjectURL(blob);
       setAdjustedImageUrl(blobUrl);
-  
+      
       // Auto-switch to adjusted view
       if (viewMode !== "adjusted") {
         setViewMode("adjusted");
       }
-  
+      
     } catch (error) {
       console.error("Adjustment failed:", error);
       notify("danger", "Image adjustment failed.");
     }
   };
-
+  
   // NOTIFICATION
+  const [notifications, setNotifications] = useState([]);
+  const notificationAlertRef = useRef(null);
+
   const notify = (type, message) => {
     const options = {
       place: "tr", // bottom right
@@ -140,6 +142,17 @@ function Dashboard(props) {
       autoDismiss: 5,
     };
     notificationAlertRef.current.notificationAlert(options);
+    
+    // Save plain text notification for the navbar dropdown
+    const plainMessage =
+      (type === "success" ? "Success - " :
+      type === "danger" ? "Error - " :
+      type === "info" ? "" : "") + message;
+
+    setNotifications((prev) => {
+      const updated = [...prev, plainMessage];
+      return updated.slice(-10); // Keep max 10 latest
+    });
   };  
   
   // UPLOAD
@@ -214,7 +227,7 @@ function Dashboard(props) {
       setProcessedImageUrl(afterUrl); // after_url
       setProcessedFilename(filename)
       setProgress(100); // complete  
-      notify("success", "Image processed successfully.");
+      notify("success", `Image ${uploadedImage.name} processed successfully.`);
       setImageHistory(prev => [...prev, {
         name: uploadedImage.name,
         before: uploadedImageUrl,
@@ -237,7 +250,7 @@ function Dashboard(props) {
       console.error("Processing failed:", error);
       setProcessedImageUrl(uploadedImageUrl);
       setProgress(0);
-      notify("danger", "Image processing failed.");
+      notify("danger", `Image processing failed for ${uploadedImage.name}.`);
     } finally {
       setTimeout(() => setIsProcessing(false), 5000);
     }
@@ -289,6 +302,10 @@ function Dashboard(props) {
 
   return (
     <>
+      <NotificationAlert ref={notificationAlertRef} />
+      <AdminNavbar
+        notifications={notifications}
+      />
       <div className="content">
         <Row>
           <Col lg="4" md="12">
@@ -497,7 +514,7 @@ function Dashboard(props) {
           </Row>
         <Row>
           {/* <Col lg="4" md="12"> */}
-          <Card className="card-chart">
+          <Card id="rgb-histogram" className="card-chart">
           <CardHeader>
             <Row>
               <Col className="text-left" sm="6">
@@ -624,7 +641,7 @@ function Dashboard(props) {
           </Card>
         </Row>
         <Row>
-          <Card>
+          <Card id="history">
               <CardHeader>
                 <Row>
                   <Col className="text-left" sm="6">
@@ -690,10 +707,6 @@ function Dashboard(props) {
               </CardBody>
             </Card>
         </Row>
-        <div className="react-notification-alert-container">
-          <NotificationAlert ref={notificationAlertRef} />
-        </div>
-
         {/* <Row>
           <Col lg="4">
             <Card className="card-chart">

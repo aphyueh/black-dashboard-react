@@ -47,19 +47,73 @@ import {
 function Dashboard(props) {
   
   const backendUrl = process.env.REACT_APP_API_URL;
-  useEffect(() => {
-      // 1. Trigger cleanup
-    fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
-    .then(res => res.json())
-    .then(data => console.log("Cleanup response:", data))
-    .catch(err => console.error("Cleanup error:", err));
+  // NOTIFICATION
+  const [notifications, setNotifications] = useState([]);
+  const notificationAlertRef = useRef(null);
 
-  // 2. Trigger model initialization
-  fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
-    .then(res => res.json())
-    .then(data => console.log("Init model response:", data))
-    .catch(err => console.error("Init model error:", err));
-  }, []); // Runs only once on page load/refresh
+  const notify = (type, message) => {
+    const options = {
+      place: "tr", // bottom right
+      message: (
+        <div>
+          <div>
+            <b>
+              {type === "success" ? "Success - " : 
+               type === "danger" ? "Error - " : 
+               type === "info" ? "" : ""}
+            </b>
+            {message}
+          </div>
+        </div>
+      ),
+      type: type, // "success" or "danger"
+      icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
+      autoDismiss: 5,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+    
+    // Save plain text notification for the navbar dropdown
+    const plainMessage =
+      (type === "success" ? "Success - " :
+      type === "danger" ? "Error - " :
+      type === "info" ? "" : "") + message;
+
+    setNotifications((prev) => {
+      const updated = [...prev, plainMessage];
+      return updated.slice(-10); // Keep max 10 latest
+    });
+  };  
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        notify("info", "Cleaning up previous files...");
+        // 1. Trigger cleanup
+        fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => console.log("Cleanup response:", data))
+        .catch(err => console.error("Cleanup error:", err));
+        notify("success", "Cleanup complete.");
+
+        notify("info",
+          <>
+          <Spinner size="sm" color="primary" />
+          Loading Color Cast Removal Model...
+          </>
+        );
+        // 2. Trigger model initialization
+        fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => console.log("Init model response:", data))
+          .catch(err => console.error("Init model error:", err));
+        } catch (err) {
+          console.error("Please refresh page.")
+          notify("danger", "Initialization failed. Please refresh page.");
+      }
+    };
+
+    initialize();
+  }, [backendUrl]); // Runs only once on page load/refresh
+
 
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -69,7 +123,6 @@ function Dashboard(props) {
   const [processedFilename, setProcessedFilename] = React.useState(null);
   const [processedBlob, setProcessedBlob] = useState(null);
 
-  
   // HISTORY
   const [imageHistory, setImageHistory] = useState([]);
   
@@ -119,42 +172,6 @@ function Dashboard(props) {
     }
   };
   
-  // NOTIFICATION
-  const [notifications, setNotifications] = useState([]);
-  const notificationAlertRef = useRef(null);
-
-  const notify = (type, message) => {
-    const options = {
-      place: "tr", // bottom right
-      message: (
-        <div>
-          <div>
-            <b>
-              {type === "success" ? "Success - " : 
-               type === "danger" ? "Error - " : 
-               type === "info" ? "" : ""}
-            </b>
-            {message}
-          </div>
-        </div>
-      ),
-      type: type, // "success" or "danger"
-      icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
-      autoDismiss: 5,
-    };
-    notificationAlertRef.current.notificationAlert(options);
-    
-    // Save plain text notification for the navbar dropdown
-    const plainMessage =
-      (type === "success" ? "Success - " :
-      type === "danger" ? "Error - " :
-      type === "info" ? "" : "") + message;
-
-    setNotifications((prev) => {
-      const updated = [...prev, plainMessage];
-      return updated.slice(-10); // Keep max 10 latest
-    });
-  };  
   
   // UPLOAD
   const handleImageUpload = async (event) => {
@@ -204,7 +221,11 @@ function Dashboard(props) {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
         onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          // Calculate the percentage and cap it at 90%
+          const percentCompleted = Math.min(
+            Math.round((progressEvent.loaded * 100) / progressEvent.total),
+            90
+          );
           setProgress(percentCompleted);
         },
       });
@@ -481,6 +502,7 @@ function Dashboard(props) {
                       color="warning"
                       onClick={() => {
                         setAdjustedImageUrl(processedImageUrl)
+                        setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
                       }}
                       disabled={!processedImageUrl} // Optional: disable when no image
                     >
@@ -545,32 +567,32 @@ function Dashboard(props) {
                       {
                         label: "Red (Input)",
                         data: inputHistogram?.r || [],
-                        backgroundColor: "rgba(255, 99, 132, 0.8)",
+                        backgroundColor: "rgba(255, 99, 132, 0.9)",
                       },
                       {
                         label: "Green (Input)",
                         data: inputHistogram?.g || [],
-                        backgroundColor: "rgba(75, 192, 192, 0.8)",
+                        backgroundColor: "rgba(75, 192, 192, 0.9)",
                       },
                       {
                         label: "Blue (Input)",
                         data: inputHistogram?.b || [],
-                        backgroundColor: "rgba(54, 162, 235, 0.8)",
+                        backgroundColor: "rgba(54, 162, 235, 0.9)",
                       },
                       {
                         label: "Red (Output)",
                         data: outputHistogram?.r || [],
-                        backgroundColor: "rgba(255, 99, 132, 0.4)",
+                        backgroundColor: "rgba(255, 99, 132, 0.9)",
                       },
                       {
                         label: "Green (Output)",
                         data: outputHistogram?.g || [],
-                        backgroundColor: "rgba(75, 192, 192, 0.4)",
+                        backgroundColor: "rgba(75, 192, 192, 0.9)",
                       },
                       {
                         label: "Blue (Output)",
                         data: outputHistogram?.b || [],
-                        backgroundColor: "rgba(54, 162, 235, 0.4)",
+                        backgroundColor: "rgba(54, 162, 235, 0.9)",
                       },
                     ],
                   }}
@@ -590,17 +612,17 @@ function Dashboard(props) {
                           {
                             label: "Red",
                             data: inputHistogram?.r || [],
-                            backgroundColor: "rgba(255, 99, 132, 0.8)",
+                            backgroundColor: "rgba(255, 99, 132, 0.9)",
                           },
                           {
                             label: "Green",
                             data: inputHistogram?.g || [],
-                            backgroundColor: "rgba(75, 192, 192, 0.8)",
+                            backgroundColor: "rgba(75, 192, 192, 0.9)",
                           },
                           {
                             label: "Blue",
                             data: inputHistogram?.b || [],
-                            backgroundColor: "rgba(54, 162, 235, 0.8)",
+                            backgroundColor: "rgba(54, 162, 235, 0.9)",
                           },
                         ],
                       }}
@@ -618,17 +640,17 @@ function Dashboard(props) {
                           {
                             label: "Red",
                             data: outputHistogram?.r || [],
-                            backgroundColor: "rgba(255, 99, 132, 0.8)",
+                            backgroundColor: "rgba(255, 99, 132, 0.9)",
                           },
                           {
                             label: "Green",
                             data: outputHistogram?.g || [],
-                            backgroundColor: "rgba(75, 192, 192, 0.8)",
+                            backgroundColor: "rgba(75, 192, 192, 0.9)",
                           },
                           {
                             label: "Blue",
                             data: outputHistogram?.b || [],
-                            backgroundColor: "rgba(54, 162, 235, 0.8)",
+                            backgroundColor: "rgba(54, 162, 235, 0.9)",
                           },
                         ],
                       }}

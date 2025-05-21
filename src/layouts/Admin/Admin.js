@@ -15,7 +15,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React , { useState , useRef } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 // javascript plugin used to create scrollbars on windows
 import PerfectScrollbar from "perfect-scrollbar";
@@ -27,6 +27,8 @@ import Sidebar from "components/Sidebar/Sidebar.js";
 import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
 import routes from "routes.js";
+import Dashboard from "views/Dashboard.js";
+
 
 import logo from "assets/img/react-logo.png";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
@@ -79,25 +81,6 @@ function Admin(props) {
     document.documentElement.classList.toggle("nav-open");
     setsidebarOpened(!sidebarOpened);
   };
-  const getRoutes = (routes) => {
-    return routes.map((prop, key) => {
-      if (prop.layout === "/admin") {
-        return (
-          <Route path={prop.path} element={prop.component} key={key} exact />
-        );
-      } else {
-        return null;
-      }
-    });
-  };
-  const getBrandText = (path) => {
-    for (let i = 0; i < routes.length; i++) {
-      if (location.pathname.indexOf(routes[i].layout + routes[i].path) !== -1) {
-        return routes[i].name;
-      }
-    }
-    return "Brand";
-  };
   const [notifications, setNotifications] = useState([]);
   const notificationAlertRef = useRef(null);
 
@@ -133,6 +116,25 @@ function Admin(props) {
       return updated.slice(-10); // Keep max 10 latest
     });
   };  
+  const getRoutes = (routes) => {
+    return routes.map((prop, key) => {
+      if (prop.layout === "/admin") {
+        return (
+          <Route path={prop.path} element={<prop.component notify={notify} />} key={key} exact />
+        );
+      } else {
+        return null;
+      }
+    });
+  };
+  const getBrandText = (path) => {
+    for (let i = 0; i < routes.length; i++) {
+      if (location.pathname.indexOf(routes[i].layout + routes[i].path) !== -1) {
+        return routes[i].name;
+      }
+    }
+    return "Brand";
+  };
   return (
     <BackgroundColorContext.Consumer>
       {({ color, changeColor }) => (
@@ -160,12 +162,6 @@ function Admin(props) {
                 <Route
                   path="/"
                   element={<Navigate to="/admin/dashboard" replace />}
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <Dashboard notify={notify} />
-                  }
                 />
               </Routes>
               {

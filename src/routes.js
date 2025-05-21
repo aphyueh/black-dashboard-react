@@ -22,7 +22,7 @@ var routes = [
     path: "/dashboard",
     name: "Color Cast Removal",
     icon: "tim-icons icon-chart-pie-36",
-    component: <Dashboard />,
+    component: Dashboard,
     layout: "/admin",
   },
   {

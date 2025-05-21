@@ -17,7 +17,7 @@
 */
 import axios from "axios";
 import classNames from "classnames";
-import React , { useState , useRef , useEffect } from "react";
+import React , { useState , useEffect } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import NotificationAlert from "react-notification-alert";
 import Settings from "./Settings";
@@ -30,17 +30,9 @@ import {
   CardHeader,
   CardBody,
   CardTitle,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
-  UncontrolledDropdown,
-  Label,
-  FormGroup,
-  Input,
   Table,
   Row,
   Col,
-  UncontrolledTooltip,
 } from "reactstrap";
 
 function Dashboard(props) {
@@ -313,7 +305,6 @@ function Dashboard(props) {
 
   return (
     <>
-      <NotificationAlert ref={notificationAlertRef} />
       <div className="content">
         <Row>
           <Col lg="4" md="12">

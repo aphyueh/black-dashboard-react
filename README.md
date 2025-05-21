@@ -1,6 +1,6 @@
 # Color Cast Removal (CCR) Website
 
-CCRWebsite is a frontend user interface for a color cast removal web application. Built with React and styled using the [Black Dashboard React](https://github.com/creativetimofficial/black-dashboard-react?tab=readme-ov-file) template, the UI provides image upload, processing feedback, history tracking, and histogram visualizations, all integrated with a [backend](https://github.com/aphyueh/ccrbackend) server via API calls configured through environment variables.
+Color Cast Removal tool is a frontend user interface for a color cast removal web application. Built with React and styled using the [Black Dashboard React](https://github.com/creativetimofficial/black-dashboard-react?tab=readme-ov-file) template, the UI provides image upload, processing feedback, history tracking, and histogram visualizations, all integrated with a [backend](https://github.com/aphyueh/ccrbackend) server via API calls configured through environment variables.
 
 ## Features
 
@@ -41,8 +41,8 @@ CCRWebsite is a frontend user interface for a color cast removal web application
 1. Clone the Repository
 
 ```bash
-git clone https://github.com/aphyueh/CCRWebsite.git
-cd CCRWebsite
+git clone https://github.com/aphyueh/ccrfrontend.git
+cd ccrfrontend
 ```
 2. Install Dependencies
 
@@ -55,7 +55,7 @@ npm install
 Create a `.env` file in the project root with the following:
 
 ```python
-REACT_APP_API_BASE_URL=https://ccrbackend-1005035431569.asia-southeast1.run.app
+REACT_APP_API_BASE_URL=<your-backend-cloud-run-url>
 ```
 
 4. Run Locally
@@ -89,7 +89,7 @@ A service URL will be provided.
 ## 📁 Project Structure
 
 ```plaintext
-CCRWebsite/
+ccrfrontend/
 ├── public/                 # Static assets
 ├── src/
 │   ├── assets/             # Logo, images
@@ -159,7 +159,7 @@ Implemented using the `react-notification-alert` package.
 ## Reporting Issues
 We use GitHub Issues as the official bug tracker for the Color Cast Removal Tool. Here are some advices for our users that want to report an issue:
 
-Make sure that you are using the latest version of the CCRWebsite. Check the CHANGELOG from your dashboard on our website.
+Make sure that you are using the latest version of our color cast removal website. Check the CHANGELOG from your dashboard on our website.
 Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
 Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
 

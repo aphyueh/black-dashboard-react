@@ -28,7 +28,7 @@ function Footer() {
         <Nav>
           <NavItem>
             <NavLink href="https://github.com/k-cmy/color_cast_removal">
-              MDS07's Color Cast Removal Product
+              Color Cast Removal Tool
             </NavLink>
           </NavItem>
           <NavItem>
@@ -43,13 +43,12 @@ function Footer() {
           </NavItem>
         </Nav>
         <div className="copyright">
-          © {new Date().getFullYear()} made with{" "}
-          <i className="tim-icons icon-heart-2" /> by{" "}
+          © {new Date().getFullYear()} made by
           <a
-            href="https://www.creative-tim.com/?ref=bdr-user-archive-footer"
+            href=""
             target="_blank"
           >
-            Creative Tim
+            MDS07
           </a>{" "}
           for a better web.
         </div>

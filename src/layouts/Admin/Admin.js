@@ -30,6 +30,7 @@ import routes from "routes.js";
 
 import logo from "assets/img/react-logo.png";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
+import NotificationAlert from "react-notification-alert"
 
 var ps;
 
@@ -97,10 +98,46 @@ function Admin(props) {
     }
     return "Brand";
   };
+  const [notifications, setNotifications] = useState([]);
+  const notificationAlertRef = useRef(null);
+
+  const notify = (type, message) => {
+    const options = {
+      place: "tr", // bottom right
+      message: (
+        <div>
+          <div>
+            <b>
+              {type === "success" ? "Success - " : 
+               type === "danger" ? "Error - " : 
+               type === "info" ? "" : ""}
+            </b>
+            {message}
+          </div>
+        </div>
+      ),
+      type: type, // "success" or "danger"
+      icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
+      autoDismiss: 5,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+    
+    // Save plain text notification for the navbar dropdown
+    const plainMessage =
+      (type === "success" ? "Success - " :
+      type === "danger" ? "Error - " :
+      type === "info" ? "" : "") + message;
+
+    setNotifications((prev) => {
+      const updated = [...prev, plainMessage];
+      return updated.slice(-10); // Keep max 10 latest
+    });
+  };  
   return (
     <BackgroundColorContext.Consumer>
       {({ color, changeColor }) => (
         <React.Fragment>
+          <NotificationAlert ref={notificationAlertRef} />
           <div className="wrapper">
             <Sidebar
               routes={routes}
@@ -116,12 +153,19 @@ function Admin(props) {
                 brandText={getBrandText(location.pathname)}
                 toggleSidebar={toggleSidebar}
                 sidebarOpened={sidebarOpened}
+                notifications={notifications}
               />
               <Routes>
                 {getRoutes(routes)}
                 <Route
                   path="/"
                   element={<Navigate to="/admin/dashboard" replace />}
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <Dashboard notify={notify} />
+                  }
                 />
               </Routes>
               {

@@ -128,6 +128,26 @@ function Sidebar(props) {
                     }
                     key={key}
                   >
+                  {prop.path.startsWith("#") ? (
+                  <a
+                    href={prop.path}
+                    className="nav-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (props.toggleSidebar) {
+                        props.toggleSidebar();
+                      }
+                      const id = prop.path.replace("#", "");
+                      const el = document.getElementById(id);
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                  >
+                    <i className={prop.icon} />
+                    <p>{prop.name}</p>
+                  </a>
+                ) : (
                   <NavLink
                     to={prop.layout + prop.path}
                     className="nav-link"
@@ -136,6 +156,7 @@ function Sidebar(props) {
                     <i className={prop.icon} />
                     <p>{prop.name}</p>
                   </NavLink>
+                )}
                 </li>
               );
             })}

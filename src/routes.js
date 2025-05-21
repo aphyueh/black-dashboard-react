@@ -29,11 +29,13 @@ var routes = [
     path: "#rgb-histogram",
     name: "RGB Histogram",
     icon: "tim-icons icon-image-02",
+    layout: "",
   },
   {
     path: "#history",
     name: "History",
     icon: "tim-icons icon-time-alarm",
+    layout: "",
   },
 ];
 export default routes;

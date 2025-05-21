@@ -15,7 +15,6 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import AdminNavbar from "components/Navbars/AdminNavbar";
 import axios from "axios";
 import classNames from "classnames";
 import React , { useState , useRef , useEffect } from "react";
@@ -48,72 +47,62 @@ function Dashboard(props) {
   
   const backendUrl = process.env.REACT_APP_API_URL;
   // NOTIFICATION
-  const [notifications, setNotifications] = useState([]);
-  const notificationAlertRef = useRef(null);
+  const { notify } = props
+  // const [notifications, setNotifications] = useState([]);
+  // const notificationAlertRef = useRef(null);
 
-  const notify = (type, message) => {
-    const options = {
-      place: "tr", // bottom right
-      message: (
-        <div>
-          <div>
-            <b>
-              {type === "success" ? "Success - " : 
-               type === "danger" ? "Error - " : 
-               type === "info" ? "" : ""}
-            </b>
-            {message}
-          </div>
-        </div>
-      ),
-      type: type, // "success" or "danger"
-      icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
-      autoDismiss: 5,
-    };
-    notificationAlertRef.current.notificationAlert(options);
+  // const notify = (type, message) => {
+  //   const options = {
+  //     place: "tr", // bottom right
+  //     message: (
+  //       <div>
+  //         <div>
+  //           <b>
+  //             {type === "success" ? "Success - " : 
+  //              type === "danger" ? "Error - " : 
+  //              type === "info" ? "" : ""}
+  //           </b>
+  //           {message}
+  //         </div>
+  //       </div>
+  //     ),
+  //     type: type, // "success" or "danger"
+  //     icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
+  //     autoDismiss: 5,
+  //   };
+  //   notificationAlertRef.current.notificationAlert(options);
     
-    // Save plain text notification for the navbar dropdown
-    const plainMessage =
-      (type === "success" ? "Success - " :
-      type === "danger" ? "Error - " :
-      type === "info" ? "" : "") + message;
+  //   // Save plain text notification for the navbar dropdown
+  //   const plainMessage =
+  //     (type === "success" ? "Success - " :
+  //     type === "danger" ? "Error - " :
+  //     type === "info" ? "" : "") + message;
 
-    setNotifications((prev) => {
-      const updated = [...prev, plainMessage];
-      return updated.slice(-10); // Keep max 10 latest
-    });
-  };  
+  //   setNotifications((prev) => {
+  //     const updated = [...prev, plainMessage];
+  //     return updated.slice(-10); // Keep max 10 latest
+  //   });
+  // };  
   useEffect(() => {
     const initialize = async () => {
-      try {
-        notify("info", "Cleaning up previous files...");
-        // 1. Trigger cleanup
-        fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
+      notify("info", "Cleaning up previous files...");
+      notify("info", "Loading Color Cast Removal Model...");
+      // 1. Trigger cleanup
+      fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => console.log("Cleanup response:", data))
+      .catch(err => console.error("Cleanup error:", err));
+      notify("success", "Cleanup complete.");
+
+      // 2. Trigger model initialization
+      fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
         .then(res => res.json())
-        .then(data => console.log("Cleanup response:", data))
-        .catch(err => console.error("Cleanup error:", err));
-        notify("success", "Cleanup complete.");
-
-        notify("info",
-          <>
-          <Spinner size="sm" color="primary" />
-          Loading Color Cast Removal Model...
-          </>
-        );
-        // 2. Trigger model initialization
-        fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
-          .then(res => res.json())
-          .then(data => console.log("Init model response:", data))
-          .catch(err => console.error("Init model error:", err));
-        } catch (err) {
-          console.error("Please refresh page.")
-          notify("danger", "Initialization failed. Please refresh page.");
-      }
+        .then(data => console.log("Init model response:", data))
+        .catch(err => console.error("Init model error:", err));
+      notify("success", "Model initialization complete.")
     };
-
     initialize();
   }, [backendUrl]); // Runs only once on page load/refresh
-
 
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -325,9 +314,6 @@ function Dashboard(props) {
   return (
     <>
       <NotificationAlert ref={notificationAlertRef} />
-      <AdminNavbar
-        notifications={notifications}
-      />
       <div className="content">
         <Row>
           <Col lg="4" md="12">

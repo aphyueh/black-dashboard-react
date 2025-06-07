@@ -20,6 +20,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
 import AdminLayout from "layouts/Admin/Admin.js";
+import LandingPage from "views/LandingPage.js";
 
 import "assets/scss/black-dashboard-react.scss";
 import "assets/demo/demo.css";
@@ -37,9 +38,14 @@ root.render(
       <BrowserRouter>
         <Routes>
           <Route path="/admin/*" element={<AdminLayout />} />
-          <Route
+          <Route path="/" element={<LandingPage />} />
+          {/* <Route
             path="*"
             element={<Navigate to="/admin/dashboard" replace />}
+          /> */}
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />} 
           />
         </Routes>
       </BrowserRouter>

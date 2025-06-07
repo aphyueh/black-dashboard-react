@@ -1,6 +1,6 @@
 [
     {
-      "origin": ["https://ccrwebsite-1005035431569.asia-southeast1.run.app"],
+      "origin": ["https://ccrwebsite-147487519644.asia-southeast1.run.app"],
       "method": ["GET"],
       "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
       "maxAgeSeconds": 3600

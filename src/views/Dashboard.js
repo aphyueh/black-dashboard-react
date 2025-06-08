@@ -20,7 +20,7 @@ import classNames from "classnames";
 import Joyride, { STATUS } from 'react-joyride';
 import React , { useState , useEffect } from "react";
 import { Bar } from "react-chartjs-2";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
 import Settings from "./Settings";
 
 
@@ -41,378 +41,74 @@ import {
   Col,
 } from "reactstrap";
 
-const modalImageStyles = {
-  maxWidth: '100%',
-  height: 'auto',
-  borderRadius: '8px',
-};
+// ====================================================================
+// Part 1: The Welcome View Component
+// ====================================================================
 
-function Dashboard(props) {
-  
-  const backendUrl = process.env.REACT_APP_API_URL;
-  // NOTIFICATION
-  const { notify } = props
-
-  useEffect(() => {
-    const initialize = async () => {
-      notify("info", "Cleaning up previous files...");
-      notify("info", "Loading Color Cast Removal Model...");
-      // 1. Trigger cleanup
-      fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
-      .then(res => res.json())
-      .then(data => console.log("Cleanup response:", data))
-      .catch(err => console.error("Cleanup error:", err));
-      notify("success", "Cleanup complete.");
-
-      // 2. Trigger model initialization
-      fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => console.log("Init model response:", data))
-        .catch(err => console.error("Init model error:", err));
-      notify("success", "Model initialization complete.")
-    };
-    initialize();
-  }, [backendUrl]); // Runs only once on page load/refresh
-
-  const [progress, setProgress] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
-  const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
-  const [processedFilename, setProcessedFilename] = React.useState(null);
-  const [processedBlob, setProcessedBlob] = useState(null);
-
-  // --- JOYRIDE AND MODAL LOGIC ---
-
-  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
-  const [runTour, setRunTour] = useState(false);
-
-  // 2. CHECK LOCALSTORAGE ON MOUNT TO DECIDE IF MODAL SHOULD OPEN
-  useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcomeModal');
-    if (!hasSeenWelcome) {
-      setIsWelcomeModalOpen(true);
-    }
-  }, []); // Empty array ensures this runs only once when component mounts
-
-  // Handler for starting the tour from the modal
-  const handleStartTour = () => {
-    setIsWelcomeModalOpen(false);
-    localStorage.setItem('hasSeenWelcomeModal', 'true');
-    // Use a timeout so the modal has time to fade out before the tour starts
-    setTimeout(() => {
-      setRunTour(true);
-    }, 300);
+const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
+  const welcomeStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 'calc(100vh - 200px)', // Adjust height to fill space within layout
+    minHeight: '500px'
   };
 
-  // Handler for skipping the tour from the modal
-  const handleSkipTutorial = () => {
-    setIsWelcomeModalOpen(false);
-    localStorage.setItem('hasSeenWelcomeModal', 'true');
-  };
-
-  // ADD STATE FOR THE TOUR
-  const [tourSteps] = useState([
-    {
-      target: '.tour-step-1',
-      content: 'Welcome! Start by uploading your image here.',
-      placement: 'right',
-    },
-    {
-      target: '#tour-step-2',
-      content: 'After uploading, click this button to process the image and remove the color cast.',
-    },
-    {
-      target: '.tour-step-3',
-      content: 'Fine-tune the results using these adjustment sliders.',
-      placement: 'left',
-    },
-    {
-      target: '.tour-step-4',
-      content: 'The RGB Histogram shows you the color balance of your image.',
-    },
-    {
-      target: '.tour-step-5',
-      content: 'Your processing history is saved here. You can revert to any previous step.',
-      placement: 'top',
-    }
-  ]);
-
-  // 3. CALLBACK TO HANDLE TOUR ENDING
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // When the tour is finished or skipped, stop it
-      setRunTour(false);
-    }
-  };
-
-  // HISTORY
-  const [imageHistory, setImageHistory] = useState([]);
-  
-  // ADJUSTMENT
-  const [viewMode, setViewMode] = useState("processed");
-  const [adjustParams, setAdjustParams] = useState({
-    brightness: 0,
-    contrast: 0,
-    saturation: 0,
-    temperature: 0
-  });
-  const [adjustedImageUrl, setAdjustedImageUrl] = useState(null);
-  const [hasAdjusted, setHasAdjusted] = useState(false);
-  
-  const handleAdjustChange = async (param, value) => {
-    const newParams = { ...adjustParams, [param]: value };
-    setAdjustParams(newParams);
-    
-    if (!uploadedImage) return;
-    if (!hasAdjusted) setHasAdjusted(true);
-    
-    const formData = new FormData();
-    formData.append('image', processedBlob);
-    formData.append('brightness', newParams.brightness);
-    formData.append('contrast', newParams.contrast);
-    formData.append('saturation', newParams.saturation);
-    formData.append('temperature', newParams.temperature);
-    
-    try {
-      const adjustResponse = await axios.post(`${backendUrl}/api/adjust`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        responseType: "blob", // key part
-      });
-      
-      const blob = adjustResponse.data;
-      const blobUrl = URL.createObjectURL(blob);
-      setAdjustedImageUrl(blobUrl);
-      
-      // Auto-switch to adjusted view
-      if (viewMode !== "adjusted") {
-        setViewMode("adjusted");
-      }
-      
-    } catch (error) {
-      console.error("Adjustment failed:", error);
-      notify("danger", "Image adjustment failed.");
-    }
-  };
-  
-  // UPLOAD
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadedImage(file); // Save file for later processing
-      const localUrl = URL.createObjectURL(file);
-      setUploadedImageUrl(localUrl);
-
-      // Clear previous output & adjustments
-      setProcessedImageUrl(null);
-      setAdjustedImageUrl(null);
-      setHasAdjusted(false);
-      setViewMode("processed");
-      setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
-      setProgress(0);
-    }
-  };
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-  const handleDrop = (e) => {
-    e.preventDefault();
-    handleImageUpload({ target: { files: e.dataTransfer.files } });
-  };
-
-  // PROCESS
-  const handleProcessImage = async () => {
-    if (!uploadedImage) return;
-
-    if (imageHistory.length >= 10) {
-      notify("danger", "Image upload limit reached (max 10 images).");
-      return;
-    }  
-
-    const formData = new FormData();
-    formData.append("image", uploadedImage);
-
-    setIsProcessing(true);
-    setProgress(10);
-
-    notify("info", `Processing image: ${uploadedImage.name}`);
-  
-    try {
-      // const response = await axios.post(`${backendUrl}/api/process`, formData, {
-        const response = await axios.post(`${backendUrl}/api/inference`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        responseType: "blob",
-        onUploadProgress: (progressEvent) => {
-          // Calculate the percentage and cap it at 90%
-          const percentCompleted = Math.min(
-            Math.round((progressEvent.loaded * 100) / progressEvent.total),
-            90
-          );
-          setProgress(percentCompleted);
-        },
-      });
-      console.log("Got the response")
-      const afterBlob = response.data;
-      setProcessedBlob(afterBlob);
-      console.log("Received Blob:", afterBlob);
-      // Extract filename from Content-Disposition header
-      const disposition = response.headers["content-disposition"];
-      console.log("disposition", disposition)
-      let filename = "processed_image.png"; // fallback
-      if (disposition) {
-        const filenameRegex = /filename[^;=\n]*=(['"]?)([^'"\n]*)\1/;
-        const match = disposition.match(filenameRegex);
-        if (match && match[2]) {
-          filename = match[2];
-        }
-      }
-      const afterUrl = URL.createObjectURL(afterBlob);
-      setProcessedImageUrl(afterUrl); // after_url
-      setProcessedFilename(filename)
-      setProgress(100); // complete  
-      notify("success", `Image ${uploadedImage.name} processed successfully.`);
-      setImageHistory(prev => [...prev, {
-        name: uploadedImage.name,
-        before: uploadedImageUrl,
-        after: afterUrl
-      }]);
-      // Fetch processed image for histogram
-      try {
-        const fetchResponse = await fetch(afterUrl, { mode: "cors" });
-        if (!fetchResponse.ok) {
-          throw new Error(`Failed to fetch processed image: ${fetchResponse.statusText}`);
-        }
-        const blob = await fetchResponse.blob();
-        const processedFile = new File([blob], "processed.png", { type: blob.type });
-        await fetchHistograms(uploadedImage, processedFile);
-      } catch (fetchError) {
-        console.error("Failed to fetch processed image for histogram:", fetchError);
-        notify("danger", "Failed to load processed image for histogram generation.");
-      }
-    } catch (error) {
-      console.error("Processing failed:", error);
-      setProcessedImageUrl(uploadedImageUrl);
-      setProgress(0);
-      notify("danger", `Image processing failed for ${uploadedImage.name}.`);
-    } finally {
-      setTimeout(() => setIsProcessing(false), 5000);
-    }
-  };
-
-  // HISTOGRAM
-  const [inputHistogram, setInputHistogram] = useState(null);
-  const [outputHistogram, setOutputHistogram] = useState(null);
-  const [showSplitHistograms, setShowSplitHistograms] = useState(false);
-
-  const fetchHistograms = async (original, processed) => {
-    const formDataOriginal = new FormData();
-    formDataOriginal.append("image", original);
-
-    const formDataProcessed = new FormData();
-    formDataProcessed.append("image", processed);
-
-    try {
-      const [originalRes, processedRes] = await Promise.all([
-        axios.post(`${backendUrl}/api/histogram`, formDataOriginal),
-        axios.post(`${backendUrl}/api/histogram`, formDataProcessed),
-      ]);
-      setInputHistogram(originalRes.data);
-      setOutputHistogram(processedRes.data);
-    } catch (err) {
-      console.error("Error fetching histograms:", err);
-    }
-  };
-
-  const histogramOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        title: { display: true, text: 'Pixel Intensity', color: '#ccc' },
-      },
-      y: {
-        title: { display: true, text: 'Frequency', color: '#ccc' },
-      },
-    },
-    plugins: {
-      legend: {
-        labels: {
-          color: '#ccc',
-        },
-      },
-    },
+  const imageStyles = {
+    maxWidth: '100%',
+    height: 'auto',
+    borderRadius: '8px',
   };
 
   return (
-    <>
-      {/* 3. ADD THE MODAL TO YOUR JSX */}
-      <Modal 
-        isOpen={isWelcomeModalOpen} 
-        size="lg" // Larger modal for two columns
-        backdrop="static" // Prevents closing on backdrop click
-        keyboard={false} // Prevents closing with Esc key
-        centered // Vertically centers the modal
-      >
-        <ModalBody className="py-4 px-4">
-          <Container>
-            <Row className="d-flex align-items-center">
-              <Col md="6">
-                <h1 className="title text-primary">Welcome!</h1>
-                <h4 className="description">
-                  Instantly correct color casts in your photos with our powerful AI tool.
-                </h4>
-                <p className="text-muted">
-                  Click "Get Started" for a quick tour of the main features, or skip straight to editing.
-                </p>
-              </Col>
-              <Col md="6">
-                <img 
-                  src="https://i.imgur.com/your-image-url.jpg" // <-- ADD YOUR IMAGE URL HERE
-                  alt="Color cast correction example"
-                  style={modalImageStyles}
-                />
-              </Col>
-            </Row>
-          </Container>
-        </ModalBody>
-        <ModalFooter className="justify-content-center">
-          <Button
-            className="btn-round"
-            color="primary"
-            size="lg"
-            onClick={handleStartTour}
-          >
-            Get Started
-          </Button>
-          <Button
-            className="btn-round ml-2"
-            color="secondary"
-            size="lg"
-            onClick={handleSkipTutorial}
-          >
-            Skip Tutorial
-          </Button>
-        </ModalFooter>
-      </Modal>
-      {/* ADD THE JOYRIDE COMPONENT */}
-      <Joyride
-        steps={tourSteps}
-        run={runTour}
-        callback={handleJoyrideCallback}
-        continuous={true}
-        showProgress={true}
-        showSkipButton={true}
-        styles={{
-          options: {
-            primaryColor: '#e14eca', 
-            textColor: '#fff',
-            backgroundColor: '#333',
-            arrowColor: '#333'
-          }
-        }}
-      />
-      <div className="content">
+    // Add fade-out class when triggered
+    <div className={`welcome-container ${isFadingOut ? 'fade-out' : 'fade-in'}`} style={welcomeStyles}>
+      <Row className="d-flex align-items-center">
+        <Col md="6" className="pr-md-5">
+          <h1 className="title text-primary">Color Cast Removal</h1>
+          <h3 className="description">
+            Instantly correct color casts in your photos with our powerful AI tool.
+          </h3>
+          <p className="text-muted mt-4">
+            Take a quick tour to see how it works, or jump right in and start editing. Your workflow, your choice.
+          </p>
+          <div className="mt-5">
+            <Button className="btn-round" color="primary" size="lg" onClick={onStartTour}>
+              Get Started
+            </Button>
+            <Button className="btn-round ml-2" color="secondary" size="lg" onClick={onSkip}>
+              Skip Tutorial
+            </Button>
+          </div>
+        </Col>
+        <Col md="6" className="mt-4 mt-md-0">
+          <img 
+            src="https://i.imgur.com/your-image-url.jpg" 
+            alt="Color cast correction example"
+            style={imageStyles}
+          />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+// ====================================================================
+// Part 2: The Dashboard Content Component (all your old JSX)
+// ====================================================================
+const DashboardContent = (props) => {
+  // Destructure ALL the props you need from the main Dashboard component
+  const {
+    handleImageUpload, handleDragOver, handleDrop, uploadedImageUrl, uploadedImage,
+    handleProcessImage, viewMode, setViewMode, processedImageUrl, hasAdjusted, adjustedImageUrl,
+    processedFilename, progress, isProcessing, adjustParams, handleAdjustChange, setAdjustedImageUrl,
+    setAdjustParams, showSplitHistograms, setShowSplitHistograms, inputHistogram, outputHistogram,
+    histogramOptions, imageHistory, setImageHistory
+  } = props;
+  
+  return (
+    // Add the fade-in class for a smooth transition
+    <div className="fade-in">
         <Row>
           <Col lg="4" md="12" className="tour-step-1">
             <Card>
@@ -814,395 +510,366 @@ function Dashboard(props) {
               </CardBody>
             </Card>
         </Row>
-        {/* <Row>
-          <Col lg="4">
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">Total Shipments</h5>
-                <CardTitle tag="h3">
-                  <i className="tim-icons icon-bell-55 text-info" /> 763,215
-                </CardTitle>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Line
-                    data={chartExample2.data}
-                    options={chartExample2.options}
-                  />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="4">
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">Daily Sales</h5>
-                <CardTitle tag="h3">
-                  <i className="tim-icons icon-delivery-fast text-primary" />{" "}
-                  3,500€
-                </CardTitle>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Bar
-                    data={chartExample3.data}
-                    options={chartExample3.options}
-                  />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="4">
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">Completed Tasks</h5>
-                <CardTitle tag="h3">
-                  <i className="tim-icons icon-send text-success" /> 12,100K
-                </CardTitle>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Line
-                    data={chartExample4.data}
-                    options={chartExample4.options}
-                />
-              </div>
-            </CardBody>
-          </Card>
-        </Col>
-        </Row>
-        <Row>
-          <Col lg="6" md="12">
-            <Card className="card-tasks">
-              <CardHeader>
-                <h6 className="title d-inline">Tasks(5)</h6>
-                <p className="card-category d-inline"> today</p>
-                <UncontrolledDropdown>
-                  <DropdownToggle
-                    caret
-                    className="btn-icon"
-                    color="link"
-                    data-toggle="dropdown"
-                    type="button"
-                  >
-                    <i className="tim-icons icon-settings-gear-63" />
-                  </DropdownToggle>
-                  <DropdownMenu aria-labelledby="dropdownMenuLink" right>
-                    <DropdownItem
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      Action
-                    </DropdownItem>
-                    <DropdownItem
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      Another action
-                    </DropdownItem>
-                    <DropdownItem
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      Something else
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-              </CardHeader>
-              <CardBody>
-                <div className="table-full-width table-responsive">
-                  <Table>
-                    <tbody>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input defaultValue="" type="checkbox" />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">Update the Documentation</p>
-                          <p className="text-muted">
-                            Dwuamish Head, Seattle, WA 8:47 AM
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip636901683"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip636901683"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input
-                                defaultChecked
-                                defaultValue=""
-                                type="checkbox"
-                              />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">GDPR Compliance</p>
-                          <p className="text-muted">
-                            The GDPR is a regulation that requires businesses to
-                            protect the personal data and privacy of Europe
-                            citizens for transactions that occur within EU
-                            member states.
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip457194718"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip457194718"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input defaultValue="" type="checkbox" />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">Solve the issues</p>
-                          <p className="text-muted">
-                            Fifty percent of all respondents said they would be
-                            more likely to shop at a company
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip362404923"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip362404923"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input defaultValue="" type="checkbox" />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">Release v2.0.0</p>
-                          <p className="text-muted">
-                            Ra Ave SW, Seattle, WA 98116, SUA 11:19 AM
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip818217463"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip818217463"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input defaultValue="" type="checkbox" />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">Export the processed files</p>
-                          <p className="text-muted">
-                            The report also shows that consumers will not easily
-                            forgive a company once a breach exposing their
-                            personal data occurs.
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip831835125"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip831835125"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <FormGroup check>
-                            <Label check>
-                              <Input defaultValue="" type="checkbox" />
-                              <span className="form-check-sign">
-                                <span className="check" />
-                              </span>
-                            </Label>
-                          </FormGroup>
-                        </td>
-                        <td>
-                          <p className="title">Arival at export process</p>
-                          <p className="text-muted">
-                            Capitol Hill, Seattle, WA 12:34 AM
-                          </p>
-                        </td>
-                        <td className="td-actions text-right">
-                          <Button
-                            color="link"
-                            id="tooltip217595172"
-                            title=""
-                            type="button"
-                          >
-                            <i className="tim-icons icon-pencil" />
-                          </Button>
-                          <UncontrolledTooltip
-                            delay={0}
-                            target="tooltip217595172"
-                            placement="right"
-                          >
-                            Edit Task
-                          </UncontrolledTooltip>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="6" md="12">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h4">Simple Table</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Table className="tablesorter" responsive>
-                  <thead className="text-primary">
-                    <tr>
-                      <th>Name</th>
-                      <th>Country</th>
-                      <th>City</th>
-                      <th className="text-center">Salary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Dakota Rice</td>
-                      <td>Niger</td>
-                      <td>Oud-Turnhout</td>
-                      <td className="text-center">$36,738</td>
-                    </tr>
-                    <tr>
-                      <td>Minerva Hooper</td>
-                      <td>Curaçao</td>
-                      <td>Sinaai-Waas</td>
-                      <td className="text-center">$23,789</td>
-                    </tr>
-                    <tr>
-                      <td>Sage Rodriguez</td>
-                      <td>Netherlands</td>
-                      <td>Baileux</td>
-                      <td className="text-center">$56,142</td>
-                    </tr>
-                    <tr>
-                      <td>Philip Chaney</td>
-                      <td>Korea, South</td>
-                      <td>Overland Park</td>
-                      <td className="text-center">$38,735</td>
-                    </tr>
-                    <tr>
-                      <td>Doris Greene</td>
-                      <td>Malawi</td>
-                      <td>Feldkirchen in Kärnten</td>
-                      <td className="text-center">$63,542</td>
-                    </tr>
-                    <tr>
-                      <td>Mason Porter</td>
-                      <td>Chile</td>
-                      <td>Gloucester</td>
-                      <td className="text-center">$78,615</td>
-                    </tr>
-                    <tr>
-                      <td>Jon Porter</td>
-                      <td>Portugal</td>
-                      <td>Gloucester</td>
-                      <td className="text-center">$98,615</td>
-                    </tr>
-                  </tbody>
-                </Table>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row> */}
+    </div>
+  );
+}
+
+// ====================================================================
+// Part 3: The Main Dashboard "Controller" Component
+// ====================================================================
+
+function Dashboard(props) {
+
+  // --- STATE MANAGEMENT ---
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+  
+  const backendUrl = process.env.REACT_APP_API_URL;
+
+  // NOTIFICATION
+  const { notify } = props
+
+  useEffect(() => {
+    const initialize = async () => {
+      notify("info", "Cleaning up previous files...");
+      notify("info", "Loading Color Cast Removal Model...");
+      // 1. Trigger cleanup
+      fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => console.log("Cleanup response:", data))
+      .catch(err => console.error("Cleanup error:", err));
+      notify("success", "Cleanup complete.");
+
+      // 2. Trigger model initialization
+      fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => console.log("Init model response:", data))
+        .catch(err => console.error("Init model error:", err));
+      notify("success", "Model initialization complete.")
+    };
+    initialize();
+  }, [backendUrl]); // Runs only once on page load/refresh
+
+  const [progress, setProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = React.useState(null);
+  const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
+  const [processedFilename, setProcessedFilename] = React.useState(null);
+  const [processedBlob, setProcessedBlob] = useState(null);
+
+  // --- HANDLERS FOR WELCOME VIEW ---
+  const transitionToDashboard = (startTour = false) => {
+    setIsFadingOut(true); // Trigger fade-out animation
+
+    // Wait for animation to complete before changing the view
+    setTimeout(() => {
+      setShowDashboard(true);
+      if (startTour) {
+        // A small extra delay for the dashboard to render before tour starts
+        setTimeout(() => setRunTour(true), 100);
+      }
+    }, 500); // This duration must match your CSS animation duration
+  };
+
+  const handleStartTour = () => transitionToDashboard(true);
+  const handleSkipTutorial = () => transitionToDashboard(false);
+
+  // ADD STATE FOR THE TOUR
+  const [tourSteps] = useState([
+    {
+      target: '.tour-step-1',
+      content: 'Welcome! Start by uploading your image here.',
+      placement: 'right',
+    },
+    {
+      target: '#tour-step-2',
+      content: 'After uploading, click this button to process the image and remove the color cast.',
+    },
+    {
+      target: '.tour-step-3',
+      content: 'Fine-tune the results using these adjustment sliders.',
+      placement: 'left',
+    },
+    {
+      target: '.tour-step-4',
+      content: 'The RGB Histogram shows you the color balance of your image.',
+    },
+    {
+      target: '.tour-step-5',
+      content: 'Your processing history is saved here. You can revert to any previous step.',
+      placement: 'top',
+    }
+  ]);
+
+  // 3. CALLBACK TO HANDLE TOUR ENDING
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      // When the tour is finished or skipped, stop it
+      setRunTour(false);
+    }
+  };
+
+  // HISTORY
+  const [imageHistory, setImageHistory] = useState([]);
+  
+  // ADJUSTMENT
+  const [viewMode, setViewMode] = useState("processed");
+  const [adjustParams, setAdjustParams] = useState({
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    temperature: 0
+  });
+  const [adjustedImageUrl, setAdjustedImageUrl] = useState(null);
+  const [hasAdjusted, setHasAdjusted] = useState(false);
+  
+  const handleAdjustChange = async (param, value) => {
+    const newParams = { ...adjustParams, [param]: value };
+    setAdjustParams(newParams);
+    
+    if (!uploadedImage) return;
+    if (!hasAdjusted) setHasAdjusted(true);
+    
+    const formData = new FormData();
+    formData.append('image', processedBlob);
+    formData.append('brightness', newParams.brightness);
+    formData.append('contrast', newParams.contrast);
+    formData.append('saturation', newParams.saturation);
+    formData.append('temperature', newParams.temperature);
+    
+    try {
+      const adjustResponse = await axios.post(`${backendUrl}/api/adjust`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        responseType: "blob", // key part
+      });
+      
+      const blob = adjustResponse.data;
+      const blobUrl = URL.createObjectURL(blob);
+      setAdjustedImageUrl(blobUrl);
+      
+      // Auto-switch to adjusted view
+      if (viewMode !== "adjusted") {
+        setViewMode("adjusted");
+      }
+      
+    } catch (error) {
+      console.error("Adjustment failed:", error);
+      notify("danger", "Image adjustment failed.");
+    }
+  };
+  
+  // UPLOAD
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setUploadedImage(file); // Save file for later processing
+      const localUrl = URL.createObjectURL(file);
+      setUploadedImageUrl(localUrl);
+
+      // Clear previous output & adjustments
+      setProcessedImageUrl(null);
+      setAdjustedImageUrl(null);
+      setHasAdjusted(false);
+      setViewMode("processed");
+      setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
+      setProgress(0);
+    }
+  };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleImageUpload({ target: { files: e.dataTransfer.files } });
+  };
+
+  // PROCESS
+  const handleProcessImage = async () => {
+    if (!uploadedImage) return;
+
+    if (imageHistory.length >= 10) {
+      notify("danger", "Image upload limit reached (max 10 images).");
+      return;
+    }  
+
+    const formData = new FormData();
+    formData.append("image", uploadedImage);
+
+    setIsProcessing(true);
+    setProgress(10);
+
+    notify("info", `Processing image: ${uploadedImage.name}`);
+  
+    try {
+      // const response = await axios.post(`${backendUrl}/api/process`, formData, {
+        const response = await axios.post(`${backendUrl}/api/inference`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        responseType: "blob",
+        onUploadProgress: (progressEvent) => {
+          // Calculate the percentage and cap it at 90%
+          const percentCompleted = Math.min(
+            Math.round((progressEvent.loaded * 100) / progressEvent.total),
+            90
+          );
+          setProgress(percentCompleted);
+        },
+      });
+      console.log("Got the response")
+      const afterBlob = response.data;
+      setProcessedBlob(afterBlob);
+      console.log("Received Blob:", afterBlob);
+      // Extract filename from Content-Disposition header
+      const disposition = response.headers["content-disposition"];
+      console.log("disposition", disposition)
+      let filename = "processed_image.png"; // fallback
+      if (disposition) {
+        const filenameRegex = /filename[^;=\n]*=(['"]?)([^'"\n]*)\1/;
+        const match = disposition.match(filenameRegex);
+        if (match && match[2]) {
+          filename = match[2];
+        }
+      }
+      const afterUrl = URL.createObjectURL(afterBlob);
+      setProcessedImageUrl(afterUrl); // after_url
+      setProcessedFilename(filename)
+      setProgress(100); // complete  
+      notify("success", `Image ${uploadedImage.name} processed successfully.`);
+      setImageHistory(prev => [...prev, {
+        name: uploadedImage.name,
+        before: uploadedImageUrl,
+        after: afterUrl
+      }]);
+      // Fetch processed image for histogram
+      try {
+        const fetchResponse = await fetch(afterUrl, { mode: "cors" });
+        if (!fetchResponse.ok) {
+          throw new Error(`Failed to fetch processed image: ${fetchResponse.statusText}`);
+        }
+        const blob = await fetchResponse.blob();
+        const processedFile = new File([blob], "processed.png", { type: blob.type });
+        await fetchHistograms(uploadedImage, processedFile);
+      } catch (fetchError) {
+        console.error("Failed to fetch processed image for histogram:", fetchError);
+        notify("danger", "Failed to load processed image for histogram generation.");
+      }
+    } catch (error) {
+      console.error("Processing failed:", error);
+      setProcessedImageUrl(uploadedImageUrl);
+      setProgress(0);
+      notify("danger", `Image processing failed for ${uploadedImage.name}.`);
+    } finally {
+      setTimeout(() => setIsProcessing(false), 5000);
+    }
+  };
+
+  // HISTOGRAM
+  const [inputHistogram, setInputHistogram] = useState(null);
+  const [outputHistogram, setOutputHistogram] = useState(null);
+  const [showSplitHistograms, setShowSplitHistograms] = useState(false);
+
+  const fetchHistograms = async (original, processed) => {
+    const formDataOriginal = new FormData();
+    formDataOriginal.append("image", original);
+
+    const formDataProcessed = new FormData();
+    formDataProcessed.append("image", processed);
+
+    try {
+      const [originalRes, processedRes] = await Promise.all([
+        axios.post(`${backendUrl}/api/histogram`, formDataOriginal),
+        axios.post(`${backendUrl}/api/histogram`, formDataProcessed),
+      ]);
+      setInputHistogram(originalRes.data);
+      setOutputHistogram(processedRes.data);
+    } catch (err) {
+      console.error("Error fetching histograms:", err);
+    }
+  };
+
+  const histogramOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Pixel Intensity', color: '#ccc' },
+      },
+      y: {
+        title: { display: true, text: 'Frequency', color: '#ccc' },
+      },
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#ccc',
+        },
+      },
+    },
+  };
+
+  return (
+    <>
+      {/* CSS for transitions */}
+      <style>{`
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .fade-out { animation: fadeOut 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+      `}</style>
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showProgress={true}
+        showSkipButton={true}
+        styles={{
+          options: {
+            primaryColor: '#e14eca', 
+            textColor: '#fff',
+            backgroundColor: '#333',
+            arrowColor: '#333'
+          }
+        }}
+      />
+      <div className="content">
+      {!showDashboard ? (
+          <WelcomeView 
+            onStartTour={handleStartTour} 
+            onSkip={handleSkipTutorial} 
+            isFadingOut={isFadingOut} 
+          />
+        ) : (
+          <DashboardContent
+          handleImageUpload={handleImageUpload}
+          handleDragOver={handleDragOver}
+          handleDrop={handleDrop}
+          uploadedImageUrl={uploadedImageUrl}
+          uploadedImage={uploadedImage}
+          handleProcessImage={handleProcessImage}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          processedImageUrl={processedImageUrl}
+          hasAdjusted={hasAdjusted}
+          adjustedImageUrl={adjustedImageUrl}
+          processedFilename={processedFilename}
+          progress={progress}
+          isProcessing={isProcessing}
+          adjustParams={adjustParams}
+          handleAdjustChange={handleAdjustChange}
+          setAdjustedImageUrl={setAdjustedImageUrl}
+          setAdjustParams={setAdjustParams}
+          showSplitHistograms={showSplitHistograms}
+          setShowSplitHistograms={setShowSplitHistograms}
+          inputHistogram={inputHistogram}
+          outputHistogram={outputHistogram}
+          histogramOptions={histogramOptions}
+          imageHistory={imageHistory}
+          setImageHistory={setImageHistory}
+          />
+        )}
       </div>
     </>
   );

@@ -17,10 +17,12 @@
 */
 import axios from "axios";
 import classNames from "classnames";
+import Joyride, { STATUS } from 'react-joyride';
 import React , { useState , useEffect } from "react";
-import { Line, Bar } from "react-chartjs-2";
-import NotificationAlert from "react-notification-alert";
+import { Bar } from "react-chartjs-2";
+import { useLocation } from "react-router-dom";
 import Settings from "./Settings";
+
 
 // reactstrap components
 import {
@@ -30,51 +32,27 @@ import {
   CardHeader,
   CardBody,
   CardTitle,
+  Container, 
+  Modal, 
+  ModalBody, 
+  ModalFooter, 
   Table,
   Row,
   Col,
 } from "reactstrap";
+
+const modalImageStyles = {
+  maxWidth: '100%',
+  height: 'auto',
+  borderRadius: '8px',
+};
 
 function Dashboard(props) {
   
   const backendUrl = process.env.REACT_APP_API_URL;
   // NOTIFICATION
   const { notify } = props
-  // const [notifications, setNotifications] = useState([]);
-  // const notificationAlertRef = useRef(null);
 
-  // const notify = (type, message) => {
-  //   const options = {
-  //     place: "tr", // bottom right
-  //     message: (
-  //       <div>
-  //         <div>
-  //           <b>
-  //             {type === "success" ? "Success - " : 
-  //              type === "danger" ? "Error - " : 
-  //              type === "info" ? "" : ""}
-  //           </b>
-  //           {message}
-  //         </div>
-  //       </div>
-  //     ),
-  //     type: type, // "success" or "danger"
-  //     icon: type === "info" ? "tim-icons icon-notes" : "tim-icons icon-bell-55",
-  //     autoDismiss: 5,
-  //   };
-  //   notificationAlertRef.current.notificationAlert(options);
-    
-  //   // Save plain text notification for the navbar dropdown
-  //   const plainMessage =
-  //     (type === "success" ? "Success - " :
-  //     type === "danger" ? "Error - " :
-  //     type === "info" ? "" : "") + message;
-
-  //   setNotifications((prev) => {
-  //     const updated = [...prev, plainMessage];
-  //     return updated.slice(-10); // Keep max 10 latest
-  //   });
-  // };  
   useEffect(() => {
     const initialize = async () => {
       notify("info", "Cleaning up previous files...");
@@ -103,6 +81,71 @@ function Dashboard(props) {
   const [processedImageUrl, setProcessedImageUrl] = React.useState(null);
   const [processedFilename, setProcessedFilename] = React.useState(null);
   const [processedBlob, setProcessedBlob] = useState(null);
+
+  // --- JOYRIDE AND MODAL LOGIC ---
+
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+
+  // 2. CHECK LOCALSTORAGE ON MOUNT TO DECIDE IF MODAL SHOULD OPEN
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcomeModal');
+    if (!hasSeenWelcome) {
+      setIsWelcomeModalOpen(true);
+    }
+  }, []); // Empty array ensures this runs only once when component mounts
+
+  // Handler for starting the tour from the modal
+  const handleStartTour = () => {
+    setIsWelcomeModalOpen(false);
+    localStorage.setItem('hasSeenWelcomeModal', 'true');
+    // Use a timeout so the modal has time to fade out before the tour starts
+    setTimeout(() => {
+      setRunTour(true);
+    }, 300);
+  };
+
+  // Handler for skipping the tour from the modal
+  const handleSkipTutorial = () => {
+    setIsWelcomeModalOpen(false);
+    localStorage.setItem('hasSeenWelcomeModal', 'true');
+  };
+
+  // ADD STATE FOR THE TOUR
+  const [tourSteps] = useState([
+    {
+      target: '.tour-step-1',
+      content: 'Welcome! Start by uploading your image here.',
+      placement: 'right',
+    },
+    {
+      target: '#tour-step-2',
+      content: 'After uploading, click this button to process the image and remove the color cast.',
+    },
+    {
+      target: '.tour-step-3',
+      content: 'Fine-tune the results using these adjustment sliders.',
+      placement: 'left',
+    },
+    {
+      target: '.tour-step-4',
+      content: 'The RGB Histogram shows you the color balance of your image.',
+    },
+    {
+      target: '.tour-step-5',
+      content: 'Your processing history is saved here. You can revert to any previous step.',
+      placement: 'top',
+    }
+  ]);
+
+  // 3. CALLBACK TO HANDLE TOUR ENDING
+  const handleJoyrideCallback = (data) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      // When the tour is finished or skipped, stop it
+      setRunTour(false);
+    }
+  };
 
   // HISTORY
   const [imageHistory, setImageHistory] = useState([]);
@@ -152,7 +195,6 @@ function Dashboard(props) {
       notify("danger", "Image adjustment failed.");
     }
   };
-  
   
   // UPLOAD
   const handleImageUpload = async (event) => {
@@ -226,7 +268,6 @@ function Dashboard(props) {
         }
       }
       const afterUrl = URL.createObjectURL(afterBlob);
-      // const { after_url } = response.data; // gcs bucket url
       setProcessedImageUrl(afterUrl); // after_url
       setProcessedFilename(filename)
       setProgress(100); // complete  
@@ -305,12 +346,78 @@ function Dashboard(props) {
 
   return (
     <>
+      {/* 3. ADD THE MODAL TO YOUR JSX */}
+      <Modal 
+        isOpen={isWelcomeModalOpen} 
+        size="lg" // Larger modal for two columns
+        backdrop="static" // Prevents closing on backdrop click
+        keyboard={false} // Prevents closing with Esc key
+        centered // Vertically centers the modal
+      >
+        <ModalBody className="py-4 px-4">
+          <Container>
+            <Row className="d-flex align-items-center">
+              <Col md="6">
+                <h1 className="title text-primary">Welcome!</h1>
+                <h4 className="description">
+                  Instantly correct color casts in your photos with our powerful AI tool.
+                </h4>
+                <p className="text-muted">
+                  Click "Get Started" for a quick tour of the main features, or skip straight to editing.
+                </p>
+              </Col>
+              <Col md="6">
+                <img 
+                  src="https://i.imgur.com/your-image-url.jpg" // <-- ADD YOUR IMAGE URL HERE
+                  alt="Color cast correction example"
+                  style={modalImageStyles}
+                />
+              </Col>
+            </Row>
+          </Container>
+        </ModalBody>
+        <ModalFooter className="justify-content-center">
+          <Button
+            className="btn-round"
+            color="primary"
+            size="lg"
+            onClick={handleStartTour}
+          >
+            Get Started
+          </Button>
+          <Button
+            className="btn-round ml-2"
+            color="secondary"
+            size="lg"
+            onClick={handleSkipTutorial}
+          >
+            Skip Tutorial
+          </Button>
+        </ModalFooter>
+      </Modal>
+      {/* ADD THE JOYRIDE COMPONENT */}
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        callback={handleJoyrideCallback}
+        continuous={true}
+        showProgress={true}
+        showSkipButton={true}
+        styles={{
+          options: {
+            primaryColor: '#e14eca', 
+            textColor: '#fff',
+            backgroundColor: '#333',
+            arrowColor: '#333'
+          }
+        }}
+      />
       <div className="content">
         <Row>
-          <Col lg="4" md="12">
+          <Col lg="4" md="12" className="tour-step-1">
             <Card>
               <CardHeader>
-                <Row className="align-items-center">
+                <Row className="align-items-center" >
                   <Col>
                     <CardTitle tag="h3">Upload Image</CardTitle>
                   </Col>

@@ -1,8 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Row, Col } from "reactstrap"; // Using reactstrap from the template
+import { Button, Container, Row, Col } from "reactstrap";
 
-// A simple CSS for centering and styling
 const pageStyles = {
   display: 'flex',
   flexDirection: 'column',

@@ -127,7 +127,7 @@ const DashboardContent = (props) => {
                   </Col>
                 </Row>
               </CardHeader>
-              <CardBody>
+              <CardBody className="tour-step-2">
                 <input
                   type="file"
                   id="fileInput"
@@ -166,7 +166,7 @@ const DashboardContent = (props) => {
                   Filename: <strong>{uploadedImage.name}</strong>
                 </div>
               )}
-              <Button onClick={handleProcessImage} color="primary" className="mt-3 w-100">
+              <Button id="tour-step-2" onClick={handleProcessImage} color="primary" className="mt-3 w-100">
                 Process
               </Button>
               </CardBody>
@@ -269,7 +269,7 @@ const DashboardContent = (props) => {
           </Col>
           </Row>
           <Row>
-            <Card>
+            <Card className="tour-step-3">
               <CardHeader>
                 <Row className="align-items-center">
                   <Col>
@@ -309,7 +309,7 @@ const DashboardContent = (props) => {
                   </Col>
                 </Row>
               </CardHeader>
-              <CardBody>
+              <CardBody className="tour-step-4">
                 {/* ─── SETTINGS ──────── */}
                 <Settings settings={adjustParams} onChange={handleAdjustChange} />
               </CardBody>
@@ -326,6 +326,7 @@ const DashboardContent = (props) => {
               </Col>
               <Col className="text-right" sm="6">
                 <Button
+                  id="tour-step-6"
                   size="sm"
                   color="info"
                   onClick={() => setShowSplitHistograms(!showSplitHistograms)}
@@ -336,7 +337,7 @@ const DashboardContent = (props) => {
               </Col>
             </Row>
           </CardHeader>
-          <CardBody>
+          <CardBody className="tour-step-5">
               {!showSplitHistograms ? (
                 // Merged View
               <div className="chart-area" style={{ height: "400px", padding: "1rem" }}>
@@ -444,7 +445,7 @@ const DashboardContent = (props) => {
           </Card>
         </Row>
         <Row>
-          <Card id="history">
+          <Card id="history" className="tour-step-7">
               <CardHeader>
                 <Row>
                   <Col className="text-left" sm="6">
@@ -580,8 +581,9 @@ function Dashboard(props) {
   const [tourSteps] = useState([
     {
       target: '.tour-step-1',
-      content: 'Welcome! Start by uploading your image here.',
+      content: 'Welcome! Start by uploading your color casted image here.',
       placement: 'right',
+      disableBeacon: true,
     },
     {
       target: '#tour-step-2',
@@ -594,11 +596,19 @@ function Dashboard(props) {
     },
     {
       target: '.tour-step-4',
-      content: 'The RGB Histogram shows you the color balance of your image.',
+      content: 'Brightness adjusts how light or dark your image appears. /n ',
     },
     {
       target: '.tour-step-5',
-      content: 'Your processing history is saved here. You can revert to any previous step.',
+      content: 'The RGB Histogram shows you the color balance of your color cast image and the corrected image.',
+    },
+    {
+      target: '#tour-step-6',
+      content: 'Click here to show the charts side-by-side instead.',
+    },
+    {
+      target: '.tour-step-7',
+      content: 'Your processing history of previous 10 images are saved here. You can clear history when storage is full.',
       placement: 'top',
     }
   ]);

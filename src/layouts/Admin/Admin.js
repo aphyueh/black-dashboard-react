@@ -17,20 +17,19 @@
 */
 import React , { useState , useRef } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
-// javascript plugin used to create scrollbars on windows
 import PerfectScrollbar from "perfect-scrollbar";
 
 // core components
 import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import Footer from "components/Footer/Footer.js";
-import Sidebar from "components/Sidebar/Sidebar.js";
 import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
 import routes from "routes.js";
-import Dashboard from "views/Dashboard.js";
+// import Sidebar from "components/Sidebar/Sidebar.js";
+// import Dashboard from "views/Dashboard.js";
 
 
-import logo from "assets/img/react-logo.png";
+// import logo from "assets/img/react-logo.png";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
 import NotificationAlert from "react-notification-alert"
 
@@ -39,9 +38,9 @@ var ps;
 function Admin(props) {
   const location = useLocation();
   const mainPanelRef = React.useRef(null);
-  const [sidebarOpened, setsidebarOpened] = React.useState(
-    document.documentElement.className.indexOf("nav-open") !== -1
-  );
+  // const [sidebarOpened, setsidebarOpened] = React.useState(
+  //   document.documentElement.className.indexOf("nav-open") !== -1
+  // );
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
       document.documentElement.className += " perfect-scrollbar-on";
@@ -77,10 +76,10 @@ function Admin(props) {
     }
   }, [location]);
   // this function opens and closes the sidebar on small devices
-  const toggleSidebar = () => {
-    document.documentElement.classList.toggle("nav-open");
-    setsidebarOpened(!sidebarOpened);
-  };
+  // const toggleSidebar = () => {
+  //   document.documentElement.classList.toggle("nav-open");
+  //   setsidebarOpened(!sidebarOpened);
+  // };
   const [notifications, setNotifications] = useState([]);
   const notificationAlertRef = useRef(null);
 
@@ -141,7 +140,7 @@ function Admin(props) {
         <React.Fragment>
           <NotificationAlert ref={notificationAlertRef} />
           <div className="wrapper">
-            <Sidebar
+            {/* <Sidebar
               routes={routes}
               logo={{
                 outterLink: "https://github.com/aphyueh/CCRWebsite",
@@ -149,13 +148,14 @@ function Admin(props) {
                 imgSrc: logo,
               }}
               toggleSidebar={toggleSidebar}
-            />
+            /> */}
             <div className="main-panel" ref={mainPanelRef} data={color}>
               <AdminNavbar
                 brandText={getBrandText(location.pathname)}
-                toggleSidebar={toggleSidebar}
-                sidebarOpened={sidebarOpened}
+                // toggleSidebar={toggleSidebar}
+                // sidebarOpened={sidebarOpened}
                 notifications={notifications}
+                routes={routes}
               />
               <Routes>
                 {getRoutes(routes)}

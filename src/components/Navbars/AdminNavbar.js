@@ -16,28 +16,24 @@
 
 */
 import React from "react";
-// nodejs library that concatenates classes
 import classNames from "classnames";
 
 // reactstrap components
 import {
-  Button,
   Collapse,
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
   UncontrolledDropdown,
-  Input,
-  InputGroup,
   NavbarBrand,
   Navbar,
-  NavLink,
   Nav,
+  NavItem,
+  NavLink,
   Container,
-  Modal,
   NavbarToggler,
-  ModalHeader,
 } from "reactstrap";
+
 
 function AdminNavbar(props) {
   const [collapseOpen, setcollapseOpen] = React.useState(false);
@@ -67,14 +63,31 @@ function AdminNavbar(props) {
     setcollapseOpen(!collapseOpen);
   };
 
-  const notifications = props.notifications || [];
+  const handleScroll = (e, path) => {
+    e.preventDefault();
+    if (collapseOpen) {
+      toggleCollapse(); // Close the mobile menu if open
+    }
+    const id = path.replace("#", "");
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const { routes, notifications = []} = props;
+
+  // const notifications = props.notifications || [];
 
   return (
     <>
       <Navbar className={classNames("navbar-absolute", color)} expand="lg">
         <Container fluid>
           <div className="navbar-wrapper">
-            <div
+            <NavbarBrand href="/admin/dashboard">
+              Color Cast Removal
+            </NavbarBrand>
+            {/* <div
               className={classNames("navbar-toggle d-inline", {
                 toggled: props.sidebarOpened,
               })}
@@ -87,8 +100,8 @@ function AdminNavbar(props) {
             </div>
             <NavbarBrand href="#pablo" onClick={(e) => e.preventDefault()}>
               {props.brandText}
-            </NavbarBrand>
-          </div>
+            </NavbarBrand> */}
+          </div> 
           <NavbarToggler onClick={toggleCollapse}>
             <span className="navbar-toggler-bar navbar-kebab" />
             <span className="navbar-toggler-bar navbar-kebab" />
@@ -96,6 +109,23 @@ function AdminNavbar(props) {
           </NavbarToggler>
           <Collapse navbar isOpen={collapseOpen}>
             <Nav className="ml-auto" navbar>
+              {/* === NEW NAVIGATION LINKS === */}
+              {routes.map((prop, key) => {
+                if (!prop.showInNavbar) return null; // Only show links marked for the navbar
+                return (
+                  <NavItem key={key}>
+                    <NavLink
+                      href={prop.path}
+                      onClick={(e) => handleScroll(e, prop.path)}
+                      className="nav-link"
+                    >
+                      <i className={prop.icon} /> 
+                      <p>{prop.name}</p>
+                    </NavLink>
+                  </NavItem>
+                );
+              })}
+
               <UncontrolledDropdown nav>
                 <DropdownToggle
                   caret

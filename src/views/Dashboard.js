@@ -46,11 +46,33 @@ import {
 // ====================================================================
 
 const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
+  const imageUrls = [
+    'https://i.imgur.com/image1.jpg',
+    'https://i.imgur.com/image2.jpg',
+    'https://i.imgur.com/image3.jpg',
+    'https://i.imgur.com/image4.jpg',
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false); // Start fade out
+      setTimeout(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
+        setFade(true); // Fade in the next image
+      }, 500); // Duration of fade out
+    }, 4000); // Image change interval
+
+    return () => clearInterval(interval);
+  }, []);
+
   const welcomeStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 200px)', // Adjust height to fill space within layout
+    height: 'calc(100vh - 200px)',
     minHeight: '500px'
   };
 
@@ -58,6 +80,12 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     maxWidth: '100%',
     height: 'auto',
     borderRadius: '8px',
+    transition: 'opacity 0.5s ease-in-out',
+    opacity: fade ? 1 : 0,
+    WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+    WebkitMaskSize: '100% 100%',
+    maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+    maskSize: '100% 100%',
   };
 
   return (
@@ -82,8 +110,8 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
           </div>
         </Col>
         <Col md="6" className="mt-4 mt-md-0">
-          <img 
-            src="https://i.imgur.com/your-image-url.jpg" 
+          <img
+            src={imageUrls[currentIndex]}
             alt="Color cast correction example"
             style={imageStyles}
           />

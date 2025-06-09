@@ -47,10 +47,12 @@ import {
 
 const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
   const imageUrls = [
-    'https://i.imgur.com/image1.jpg',
-    'https://i.imgur.com/image2.jpg',
-    'https://i.imgur.com/image3.jpg',
-    'https://i.imgur.com/image4.jpg',
+    'src/assets/img/beach_cast.png',
+    'src/assets/img/beach_fixed.png',
+    'src/assets/img/green_cast.png',
+    'src/assets/img/green_fixed.png',
+    'src/assets/img/purple_casted.png',
+    'src/assets/img/purple_fixed.png'
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -576,21 +578,6 @@ function Dashboard(props) {
     initialize();
   }, [backendUrl]); // Runs only once on page load/refresh
 
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (showDashboard && (uploadedImage || processedImageUrl || hasAdjusted)) {
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [showDashboard, uploadedImage, processedImageUrl, hasAdjusted]); 
-
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -856,6 +843,21 @@ function Dashboard(props) {
       },
     },
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (showDashboard && (uploadedImage || processedImageUrl || hasAdjusted)) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showDashboard, uploadedImage, processedImageUrl, hasAdjusted]); 
 
   return (
     <>

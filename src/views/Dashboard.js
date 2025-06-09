@@ -88,7 +88,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
 
   const imageStyles = {
     maxWidth: '100%',
-    height: 'auto',
+    height: '400px',
     borderRadius: '8px',
     transition: 'opacity 0.5s ease-in-out',
     opacity: fade ? 1 : 0,
@@ -149,8 +149,8 @@ const DashboardContent = (props) => {
     // Add the fade-in class for a smooth transition
     <div className="fade-in">
         <Row>
-          <Col lg="4" md="12" className="tour-step-1">
-            <Card id="upload-image">
+          <Col lg="4" md="12">
+            <Card id="upload-image" className="tour-step-1">
               <CardHeader>
                 <Row className="align-items-center" >
                   <Col>
@@ -627,27 +627,34 @@ function Dashboard(props) {
     {
       target: '#tour-step-2',
       content: 'After uploading, click this button to process the image and remove the color cast.',
-      placement: 'top'
+      placement: 'bottom'
     },
     {
       target: '.tour-step-3',
       content: 'Fine-tune the results using these adjustment sliders.',
-      placement: 'top',
+      placement: 'bottom',
     },
     {
       target: '.tour-step-4',
-      content: 'Brightness adjusts how light or dark your image appears. /n ',
-      placement: 'top'
+      content: (
+      <div>
+        <p><strong>Brightness:</strong> Adjusts how light or dark your image appears.</p>
+        <p><strong>Contrast:</strong> Sharpens the difference between highlights and shadows.</p>
+        <p><strong>Saturation:</strong> Boosts or tones down color intensity.</p>
+        <p><strong>Temperature:</strong> Shifts the mood from cool blues to warm ambers.</p>
+      </div>
+      ),
+      placement: 'bottom'
     },
     {
       target: '.tour-step-5',
       content: 'The RGB Histogram shows you the color balance of your color cast image and the corrected image.',
-      placement: 'top'
+      placement: 'bottom'
     },
     {
       target: '#tour-step-6',
       content: 'Click here to show the charts side-by-side instead.',
-      placement: 'left'
+      placement: 'bottom'
     },
     {
       target: '.tour-step-7',

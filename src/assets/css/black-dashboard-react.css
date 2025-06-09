@@ -13603,7 +13603,7 @@ fieldset[disabled] .btn-link.active {
 }
 
 .footer {
-  padding: 24px 0 24px 250px;
+  padding: 24px 0 24px 20px;
 }
 .footer [class*="container-"] {
   padding: 0;
@@ -16743,7 +16743,7 @@ hr {
 }
 .main-panel > .content {
   padding: 78px 30px 30px 30px;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 130px);
 }
 .main-panel > .navbar {
   margin-bottom: 0;

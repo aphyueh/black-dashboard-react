@@ -52,7 +52,7 @@ function AdminNavbar(props) {
         document.documentElement.scrollTop > 59 ||
         document.body.scrollTop > 59
       ) {
-        setcolor("bg-primary"); // Use a solid color from your theme
+        setcolor("rgba(20, 102, 181, 0.5)"); // Use a solid color from your theme
       } else if (!collapseOpen) { // Only go back to transparent if mobile menu isn't open
         setcolor("navbar-transparent");
       }
@@ -84,7 +84,7 @@ function AdminNavbar(props) {
       }
     } else {
       // If opening, force a solid color
-      setcolor("bg-primary");
+      setcolor("rgba(20, 102, 181, 0.5)");
     }
     setcollapseOpen(!collapseOpen);
   };
@@ -111,7 +111,7 @@ function AdminNavbar(props) {
        <Navbar className={classNames(color)} sticky={"top"} expand="lg">
         <Container fluid>
           <div className="navbar-wrapper">
-            <NavbarBrand href="/admin/dashboard">
+            <NavbarBrand href="/admin/dashboard" className="text-xl font-bold">
               Color Cast Removal
             </NavbarBrand>
           </div> 

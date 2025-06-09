@@ -43,14 +43,14 @@ function Footer() {
           </NavItem>
         </Nav>
         <div className="copyright">
-          © {new Date().getFullYear()} made by
+          © {new Date().getFullYear()} made by{" "}
           <a
             href=""
             target="_blank"
           >
             MDS07
           </a>{" "}
-          for a better web.
+          for Effective Color Cast Removal in Outdoor Imaging.
         </div>
       </Container>
     </footer>

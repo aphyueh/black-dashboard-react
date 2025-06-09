@@ -304,31 +304,27 @@ const DashboardContent = (props) => {
                     <h5 className="card-category">Further edit image before download</h5>
                     <CardTitle tag="h4">Adjustments</CardTitle>
                   </Col>
-                  <Col className="text-right">
+                  <Col className="text-right" xs="auto">
                     <Button
+                      className="mr-2" // <-- Add a margin for spacing
                       size="sm"
                       color="warning"
                       onClick={() => {
-                        setAdjustedImageUrl(processedImageUrl)
+                        setAdjustedImageUrl(processedImageUrl);
                         setAdjustParams({ brightness: 0, contrast: 0, saturation: 0, temperature: 0 });
                       }}
-                      disabled={!processedImageUrl} // Optional: disable when no image
+                      disabled={!processedImageUrl}
                     >
-                    <i className="tim-icons icon-refresh-01 d-inline d-sm-none" /> {/* Show icon only on small screens */}
-                    <span className="d-none d-sm-inline">Reset</span>
+                      <i className="tim-icons icon-refresh-01 d-inline d-sm-none" />
+                      <span className="d-none d-sm-inline">Reset</span>
                     </Button>
-                  </Col>
-                  <Col className="text-right">
                     <Button
-                        color="success"
-                        href={viewMode === "adjusted" ? adjustedImageUrl : processedImageUrl}
-                        download
-                        disabled={
-                          viewMode === "adjusted"
-                            ? !adjustedImageUrl
-                            : !processedImageUrl
-                        }
-                      >
+                      color="success"
+                      size="sm" // <-- Make size consistent with the Reset button
+                      href={viewMode === "adjusted" ? adjustedImageUrl : processedImageUrl}
+                      download
+                      disabled={viewMode === "adjusted" ? !adjustedImageUrl : !processedImageUrl}
+                    >
                       <span className="d-none d-sm-block d-md-block">Download Image</span>
                       <span className="d-block d-sm-none">
                         <i className="tim-icons icon-cloud-download-93" />

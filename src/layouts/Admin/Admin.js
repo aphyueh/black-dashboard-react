@@ -144,9 +144,9 @@ function Admin(props) {
               }}
               toggleSidebar={toggleSidebar}
             /> */}
-            <div className="main-panel" ref={mainPanelRef} data={color}>
+            <div className="main-panel" ref={mainPanelRef} data={color} style={{ width: "100%" }}>
               <AdminNavbar
-                brandText={getBrandText(location.pathname)}
+                // brandText={getBrandText(location.pathname)}
                 // toggleSidebar={toggleSidebar}
                 // sidebarOpened={sidebarOpened}
                 notifications={notifications}

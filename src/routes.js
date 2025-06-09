@@ -24,18 +24,21 @@ var routes = [
     icon: "tim-icons icon-chart-pie-36",
     component: Dashboard,
     layout: "/admin",
+    showInNavbar: true,
   },
   {
     path: "#rgb-histogram",
     name: "RGB Histogram",
     icon: "tim-icons icon-image-02",
     layout: "",
+    showInNavbar: true,
   },
   {
     path: "#history",
     name: "History",
     icon: "tim-icons icon-time-alarm",
     layout: "",
+    showInNavbar: true,
   },
 ];
 export default routes;

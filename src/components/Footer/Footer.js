@@ -26,17 +26,17 @@ function Footer() {
     <footer className="footer">
       <Container fluid>
         <Nav>
-          <NavItem>
+          <NavItem style={{ marginRight: '40px' }}>
             <NavLink href="https://github.com/k-cmy/color_cast_removal">
               Color Cast Removal Tool
             </NavLink>
           </NavItem>
-          <NavItem>
+          <NavItem style={{ marginRight: '40px' }}>
             <NavLink href="https://github.com/aphyueh/CCRWebsite">
               Frontend
             </NavLink>
           </NavItem>
-          <NavItem>
+          <NavItem style={{ marginRight: '40px' }}>
             <NavLink href="https://github.com/aphyueh/ccrbackend">
               Backend
             </NavLink>

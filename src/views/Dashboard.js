@@ -87,8 +87,8 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
   };
 
   const imageStyles = {
-    maxWidth: '100%',
-    height: '400px',
+    width: 'auto', 
+    maxHeight: '400px',
     borderRadius: '8px',
     transition: 'opacity 0.5s ease-in-out',
     opacity: fade ? 1 : 0,
@@ -904,7 +904,9 @@ function Dashboard(props) {
             primaryColor: '#1d8cf8', 
             textColor: '#fff',
             backgroundColor: '#333',
-            arrowColor: '#333'
+            arrowColor: '#333',
+            zIndex: 9999,
+            scrollOffset: 80, 
           }
         }}
       />

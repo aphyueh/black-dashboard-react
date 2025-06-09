@@ -38,14 +38,6 @@ import {
 function AdminNavbar(props) {
   const [collapseOpen, setcollapseOpen] = React.useState(false);
   const [color, setcolor] = React.useState("navbar-transparent");
-  // React.useEffect(() => {
-  //   window.addEventListener("resize", updateColor);
-  //   // Specify how to clean up after this effect:
-  //   return function cleanup() {
-  //     window.removeEventListener("resize", updateColor);
-  //   };
-  // });
-  // === CHANGE 1: ADD A useEffect TO HANDLE NAVBAR COLOR ON SCROLL ===
   React.useEffect(() => {
     const changeColorOnScroll = () => {
       if (
@@ -64,15 +56,6 @@ function AdminNavbar(props) {
     };
   }, [collapseOpen]); // Rerun this effect if the collapse state changes
 
-  // function that adds color white/transparent to the navbar on resize (this is for the collapse)
-  // const updateColor = () => {
-  //   if (window.innerWidth < 993 && collapseOpen) {
-  //     setcolor("bg-white");
-  //   } else {
-  //     setcolor("navbar-transparent");
-  //   }
-  // };
-  // this function opens and closes the collapse on small devices
   const toggleCollapse = () => {
     if (collapseOpen) {
       // If closing, let the scroll effect take over
@@ -89,7 +72,6 @@ function AdminNavbar(props) {
     setcollapseOpen(!collapseOpen);
   };
 
-
   const handleScroll = (e, path) => {
     e.preventDefault();
     if (collapseOpen) {
@@ -101,14 +83,15 @@ function AdminNavbar(props) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
-
   const { routes, notifications = []} = props;
-
-  // const notifications = props.notifications || [];
-
   return (
     <>
-       <Navbar className={classNames(color)} sticky={"top"} expand="lg">
+      <Navbar 
+        className={typeof color === "string" && color.startsWith("navbar") ? classNames(color) : ""}
+        style={typeof color === "string" && color.startsWith("rgba") ? { backgroundColor: color } : {}}
+        sticky="top"
+        expand="lg"
+      >
         <Container fluid>
           <div className="navbar-wrapper">
             <NavbarBrand href="/admin/dashboard" className="text-xl font-bold">

@@ -576,6 +576,21 @@ function Dashboard(props) {
     initialize();
   }, [backendUrl]); // Runs only once on page load/refresh
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (showDashboard && (uploadedImage || processedImageUrl || hasAdjusted)) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showDashboard, uploadedImage, processedImageUrl, hasAdjusted]); 
+
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -738,7 +753,6 @@ function Dashboard(props) {
     notify("info", `Processing image: ${uploadedImage.name}`);
   
     try {
-      // const response = await axios.post(`${backendUrl}/api/process`, formData, {
         const response = await axios.post(`${backendUrl}/api/inference`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",

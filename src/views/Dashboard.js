@@ -82,7 +82,8 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minheight: 'calc(100vh - 150px)',
+    minheight: 'calc(100vh - 180px)',
+    padding: '20px', // Added padding to the container
   };
 
   const imageStyles = {
@@ -95,13 +96,14 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     WebkitMaskSize: '100% 100%',
     maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
     maskSize: '100% 100%',
+    padding: '20px', // Added padding to the container
   };
 
   return (
     // Add fade-out class when triggered
     <div className={`welcome-container py-5 py-lg-0 ${isFadingOut ? 'fade-out' : 'fade-in'}`} style={welcomeStyles}>
       <Row className="d-flex align-items-center">
-        <Col md="6" className="pr-md-5 pl-md-8">
+        <Col md="6" className="pr-md-5 pl-md-8 p-3 p-md-4">
           <h1 className="title text-primary">Color Cast Removal</h1>
           <h3 className="description">
             Instantly correct color casts in your photos with our powerful AI tool.
@@ -118,7 +120,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
             </Button>
           </div>
         </Col>
-        <Col md="6" className="pl-md-5 pr-md-8 mt-4 mt-md-0">
+        <Col md="6" className="pl-md-5 pr-md-8 mt-4 mt-md-0 p-3 p-md-4">
           <img
             src={imageUrls[currentIndex]}
             alt="Color cast correction example"

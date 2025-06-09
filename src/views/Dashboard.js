@@ -102,7 +102,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     // Add fade-out class when triggered
     <div className={`welcome-container ${isFadingOut ? 'fade-out' : 'fade-in'}`} style={welcomeStyles}>
       <Row className="d-flex align-items-center">
-        <Col md="6" className="pr-md-5">
+        <Col md="6" className="pr-md-5 pl-md-4">
           <h1 className="title text-primary">Color Cast Removal</h1>
           <h3 className="description">
             Instantly correct color casts in your photos with our powerful AI tool.
@@ -119,7 +119,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
             </Button>
           </div>
         </Col>
-        <Col md="6" className="mt-4 mt-md-0">
+        <Col md="6" className="pl-md-5 pr-md-4 mt-4 mt-md-0">
           <img
             src={imageUrls[currentIndex]}
             alt="Color cast correction example"
@@ -149,7 +149,7 @@ const DashboardContent = (props) => {
     <div className="fade-in">
         <Row>
           <Col lg="4" md="12" className="tour-step-1">
-            <Card>
+            <Card id="upload-image">
               <CardHeader>
                 <Row className="align-items-center" >
                   <Col>

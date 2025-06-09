@@ -20,10 +20,16 @@ import Dashboard from "views/Dashboard.js";
 var routes = [
   {
     path: "/dashboard",
-    name: "Upload Image",
+    name: "Color Cast Removal",
     icon: "tim-icons icon-image-02",
     component: Dashboard,
     layout: "/admin",
+  },
+  {
+    path: "#upload-image",
+    name: "Upload Image",
+    icon: "tim-icons icon-image-02",
+    layout: "",
     showInNavbar: true,
   },
   {

@@ -76,14 +76,13 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     }, 4000); // Image change interval
 
     return () => clearInterval(interval);
-  }, []);
+  }, [imageUrls.length]);
 
   const welcomeStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 200px)',
-    minHeight: '500px'
+    minheight: 'calc(100vh - 150px)',
   };
 
   const imageStyles = {
@@ -100,9 +99,9 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
 
   return (
     // Add fade-out class when triggered
-    <div className={`welcome-container ${isFadingOut ? 'fade-out' : 'fade-in'}`} style={welcomeStyles}>
+    <div className={`welcome-container py-5 py-lg-0 ${isFadingOut ? 'fade-out' : 'fade-in'}`} style={welcomeStyles}>
       <Row className="d-flex align-items-center">
-        <Col md="6" className="pr-md-5 pl-md-4">
+        <Col md="6" className="pr-md-5 pl-md-8">
           <h1 className="title text-primary">Color Cast Removal</h1>
           <h3 className="description">
             Instantly correct color casts in your photos with our powerful AI tool.
@@ -119,7 +118,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
             </Button>
           </div>
         </Col>
-        <Col md="6" className="pl-md-5 pr-md-4 mt-4 mt-md-0">
+        <Col md="6" className="pl-md-5 pr-md-8 mt-4 mt-md-0">
           <img
             src={imageUrls[currentIndex]}
             alt="Color cast correction example"
@@ -262,11 +261,7 @@ const DashboardContent = (props) => {
                     overflow: "hidden",
                   }}
                 >
-                  {/* <OutputImage
-                    processedImageUrl={processedImageUrl}
-                    adjustedImageUrl={adjustedImageUrl}
-                    mode={viewMode}
-                  /> */}
+              
                   {viewMode === 'processed' && processedImageUrl ? (
                     <img
                       src={processedImageUrl}
@@ -350,8 +345,7 @@ const DashboardContent = (props) => {
             </Card>
           </Row>
         <Row>
-          {/* <Col lg="4" md="12"> */}
-          <Card id="rgb-histogram" className="card-chart">
+          <Card id="rgb-histogram" className="card-chart pl-md-5 pr-md-5">
           <CardHeader>
             <Row>
               <Col className="text-left" sm="6">
@@ -479,7 +473,7 @@ const DashboardContent = (props) => {
           </Card>
         </Row>
         <Row>
-          <Card id="history" className="tour-step-7">
+          <Card id="history" className="tour-step-7 pl-md-5 pr-md-5">
               <CardHeader>
                 <Row>
                   <Col className="text-left" sm="6">
@@ -568,20 +562,29 @@ function Dashboard(props) {
   useEffect(() => {
     const initialize = async () => {
       notify("info", "Cleaning up previous files...");
-      notify("info", "Loading Color Cast Removal Model...");
+      
       // 1. Trigger cleanup
-      fetch(`${backendUrl}/api/cleanup`, { method: 'POST' })
-      .then(res => res.json())
-      .then(data => console.log("Cleanup response:", data))
-      .catch(err => console.error("Cleanup error:", err));
-      notify("success", "Cleanup complete.");
+      try {
+        const cleanupRes = await fetch(`${backendUrl}/api/cleanup`, { method: 'POST' });
+        const cleanupData = await cleanupRes.json();
+        console.log("Cleanup response:", cleanupData);
+        notify("success", "Cleanup complete.");
+      } catch (err) {
+        console.error("Cleanup error:", err);
+        notify("error", "Cleanup failed.");
+      }
 
+      notify("info", "Loading Color Cast Removal Model...");
       // 2. Trigger model initialization
-      fetch(`${backendUrl}/api/init_model`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => console.log("Init model response:", data))
-        .catch(err => console.error("Init model error:", err));
-      notify("success", "Model initialization complete.")
+      try {
+        const initRes = await fetch(`${backendUrl}/api/init_model`, { method: 'POST' });
+        const initData = await initRes.json();
+        console.log("Init model response:", initData);
+        notify("success", "Model initialization complete.");
+      } catch (err) {
+        console.error("Init model error:", err);
+        notify("error", "Model initialization failed.");
+      }
     };
     initialize();
   }, [backendUrl]); // Runs only once on page load/refresh
@@ -616,29 +619,33 @@ function Dashboard(props) {
     {
       target: '.tour-step-1',
       content: 'Welcome! Start by uploading your color casted image here.',
-      placement: 'right',
+      placement: 'right-start',
       disableBeacon: true,
     },
     {
       target: '#tour-step-2',
       content: 'After uploading, click this button to process the image and remove the color cast.',
+      placement: 'top'
     },
     {
       target: '.tour-step-3',
       content: 'Fine-tune the results using these adjustment sliders.',
-      placement: 'left',
+      placement: 'top',
     },
     {
       target: '.tour-step-4',
       content: 'Brightness adjusts how light or dark your image appears. /n ',
+      placement: 'top'
     },
     {
       target: '.tour-step-5',
       content: 'The RGB Histogram shows you the color balance of your color cast image and the corrected image.',
+      placement: 'top'
     },
     {
       target: '#tour-step-6',
       content: 'Click here to show the charts side-by-side instead.',
+      placement: 'left'
     },
     {
       target: '.tour-step-7',

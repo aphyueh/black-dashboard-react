@@ -20,8 +20,8 @@ import Dashboard from "views/Dashboard.js";
 var routes = [
   {
     path: "/dashboard",
-    name: "Color Cast Removal",
-    icon: "tim-icons icon-chart-pie-36",
+    name: "Upload Image",
+    icon: "tim-icons icon-image-02",
     component: Dashboard,
     layout: "/admin",
     showInNavbar: true,
@@ -29,14 +29,14 @@ var routes = [
   {
     path: "#rgb-histogram",
     name: "RGB Histogram",
-    icon: "tim-icons icon-image-02",
+    icon: "tim-icons icon-chart-bar-32",
     layout: "",
     showInNavbar: true,
   },
   {
     path: "#history",
     name: "History",
-    icon: "tim-icons icon-time-alarm",
+    icon: "tim-icons icon-compass-05",
     layout: "",
     showInNavbar: true,
   },

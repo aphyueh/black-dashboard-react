@@ -41,18 +41,26 @@ import {
   Col,
 } from "reactstrap";
 
+import beachCast from 'assets/img/beach_cast.png';
+import beachFixed from 'assets/img/beach_fixed.png';
+import greenCast from 'assets/img/green_cast.png';
+import greenFixed from 'assets/img/green_fixed.png';
+import purpleCasted from 'assets/img/purple_casted.png';
+import purpleFixed from 'assets/img/purple_fixed.png';
+
+
 // ====================================================================
 // Part 1: The Welcome View Component
 // ====================================================================
 
 const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
   const imageUrls = [
-    'src/assets/img/beach_cast.png',
-    'src/assets/img/beach_fixed.png',
-    'src/assets/img/green_cast.png',
-    'src/assets/img/green_fixed.png',
-    'src/assets/img/purple_casted.png',
-    'src/assets/img/purple_fixed.png'
+    beachCast,
+    beachFixed,
+    greenCast,
+    greenFixed,
+    purpleCasted,
+    purpleFixed,
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -207,7 +215,7 @@ const DashboardContent = (props) => {
               <CardHeader>
                 <Row className="align-items-center">
                     <Col>
-                      <CardTitle tag="h2">Color Cast Removal</CardTitle>
+                      <CardTitle tag="h2">Remove Color Cast</CardTitle>
                     </Col>
                     <Col className="text-right">
                       <ButtonGroup className="btn-group-toggle mb-3" data-toggle="buttons">

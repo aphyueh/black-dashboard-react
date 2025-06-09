@@ -4548,7 +4548,8 @@ input[type="button"].btn-block {
   padding-top: 0.40681rem;
   padding-bottom: 0.40681rem;
   margin-right: 0.9375rem;
-  font-size: 0.99925rem;
+  font-size: 1.5rem;
+  font-weight: bold; 
   line-height: inherit;
   white-space: nowrap;
 }
@@ -15441,7 +15442,7 @@ img {
   margin-left: 17px;
   margin-top: 3px;
   text-transform: uppercase;
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 .navbar .navbar-toggle button:focus,
 .navbar .navbar-toggler {
@@ -17385,7 +17386,7 @@ hr {
   border-top: 2px solid #e14eca;
 }
 .main-panel > .content {
-  padding: 78px 30px 30px 280px;
+  padding: 78px 30px 30px 30px;
   min-height: calc(100vh - 70px);
 }
 .main-panel > .navbar {
@@ -17543,7 +17544,7 @@ hr {
     opacity: 0;
   }
   .sidebar-mini .main-panel > .content {
-    padding-left: 130px;
+    padding-left: 30px;
   }
   .sidebar-mini footer {
     padding-left: 130px;

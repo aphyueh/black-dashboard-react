@@ -38,30 +38,57 @@ import {
 function AdminNavbar(props) {
   const [collapseOpen, setcollapseOpen] = React.useState(false);
   const [color, setcolor] = React.useState("navbar-transparent");
+  // React.useEffect(() => {
+  //   window.addEventListener("resize", updateColor);
+  //   // Specify how to clean up after this effect:
+  //   return function cleanup() {
+  //     window.removeEventListener("resize", updateColor);
+  //   };
+  // });
+  // === CHANGE 1: ADD A useEffect TO HANDLE NAVBAR COLOR ON SCROLL ===
   React.useEffect(() => {
-    window.addEventListener("resize", updateColor);
-    // Specify how to clean up after this effect:
-    return function cleanup() {
-      window.removeEventListener("resize", updateColor);
+    const changeColorOnScroll = () => {
+      if (
+        document.documentElement.scrollTop > 59 ||
+        document.body.scrollTop > 59
+      ) {
+        setcolor("bg-primary"); // Use a solid color from your theme
+      } else if (!collapseOpen) { // Only go back to transparent if mobile menu isn't open
+        setcolor("navbar-transparent");
+      }
     };
-  });
+    window.addEventListener("scroll", changeColorOnScroll);
+    // Cleanup the event listener
+    return function cleanup() {
+      window.removeEventListener("scroll", changeColorOnScroll);
+    };
+  }, [collapseOpen]); // Rerun this effect if the collapse state changes
+
   // function that adds color white/transparent to the navbar on resize (this is for the collapse)
-  const updateColor = () => {
-    if (window.innerWidth < 993 && collapseOpen) {
-      setcolor("bg-white");
-    } else {
-      setcolor("navbar-transparent");
-    }
-  };
+  // const updateColor = () => {
+  //   if (window.innerWidth < 993 && collapseOpen) {
+  //     setcolor("bg-white");
+  //   } else {
+  //     setcolor("navbar-transparent");
+  //   }
+  // };
   // this function opens and closes the collapse on small devices
   const toggleCollapse = () => {
     if (collapseOpen) {
-      setcolor("navbar-transparent");
+      // If closing, let the scroll effect take over
+      if (
+        document.documentElement.scrollTop < 60 &&
+        document.body.scrollTop < 60
+      ) {
+        setcolor("navbar-transparent");
+      }
     } else {
-      setcolor("bg-white");
+      // If opening, force a solid color
+      setcolor("bg-primary");
     }
     setcollapseOpen(!collapseOpen);
   };
+
 
   const handleScroll = (e, path) => {
     e.preventDefault();
@@ -81,26 +108,12 @@ function AdminNavbar(props) {
 
   return (
     <>
-      <Navbar className={classNames("navbar-absolute", color)} expand="lg">
+       <Navbar className={classNames(color)} sticky={"top"} expand="lg">
         <Container fluid>
           <div className="navbar-wrapper">
             <NavbarBrand href="/admin/dashboard">
               Color Cast Removal
             </NavbarBrand>
-            {/* <div
-              className={classNames("navbar-toggle d-inline", {
-                toggled: props.sidebarOpened,
-              })}
-            >
-              <NavbarToggler onClick={props.toggleSidebar}>
-                <span className="navbar-toggler-bar bar1" />
-                <span className="navbar-toggler-bar bar2" />
-                <span className="navbar-toggler-bar bar3" />
-              </NavbarToggler>
-            </div>
-            <NavbarBrand href="#pablo" onClick={(e) => e.preventDefault()}>
-              {props.brandText}
-            </NavbarBrand> */}
           </div> 
           <NavbarToggler onClick={toggleCollapse}>
             <span className="navbar-toggler-bar navbar-kebab" />
@@ -120,7 +133,7 @@ function AdminNavbar(props) {
                       className="nav-link"
                     >
                       <i className={prop.icon} /> 
-                      <p>{prop.name}</p>
+                      <span className="ml-2">{prop.name}</span>
                     </NavLink>
                   </NavItem>
                 );

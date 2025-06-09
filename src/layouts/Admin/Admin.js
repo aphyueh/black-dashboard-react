@@ -43,8 +43,6 @@ function Admin(props) {
   // );
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
-      document.documentElement.className += " perfect-scrollbar-on";
-      document.documentElement.classList.remove("perfect-scrollbar-off");
       ps = new PerfectScrollbar(mainPanelRef.current, {
         suppressScrollX: true,
       });
@@ -53,12 +51,9 @@ function Admin(props) {
         ps = new PerfectScrollbar(tables[i]);
       }
     }
-    // Specify how to clean up after this effect:
     return function cleanup() {
       if (navigator.platform.indexOf("Win") > -1) {
         ps.destroy();
-        document.documentElement.classList.add("perfect-scrollbar-off");
-        document.documentElement.classList.remove("perfect-scrollbar-on");
       }
     };
   });
@@ -111,8 +106,8 @@ function Admin(props) {
       type === "info" ? "" : "") + message;
 
     setNotifications((prev) => {
-      const updated = [...prev, plainMessage];
-      return updated.slice(-10); // Keep max 10 latest
+      const updated = [plainMessage, ...prev];
+      return updated.slice(0, 10); // Keep max 10 latest
     });
   };  
   const getRoutes = (routes) => {

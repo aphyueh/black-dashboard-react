@@ -82,8 +82,8 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minheight: 'calc(100vh - 180px)',
-    padding: '20px', // Added padding to the container
+    minheight: 'calc(100vh - 200px)',
+    padding: '20px 20px 10px 20px', 
   };
 
   const imageStyles = {
@@ -96,7 +96,7 @@ const WelcomeView = ({ onStartTour, onSkip, isFadingOut }) => {
     WebkitMaskSize: '100% 100%',
     maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
     maskSize: '100% 100%',
-    padding: '20px', // Added padding to the container
+    padding: '20px 20px 10px 20px', 
   };
 
   return (
@@ -894,7 +894,7 @@ function Dashboard(props) {
         showSkipButton={true}
         styles={{
           options: {
-            primaryColor: '#e14eca', 
+            primaryColor: '#1d8cf8', 
             textColor: '#fff',
             backgroundColor: '#333',
             arrowColor: '#333'
